@@ -1,0 +1,52 @@
+body {
+    background-color: lightblue;
+    padding-left: 50px;
+    padding-right: 50px;
+}
+
+form {
+    width: 35%;
+}
+
+fieldset {
+    display: flex;
+    border-color: blue;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+div {
+    display: flex;
+    justify-content: space-between;
+}
+
+input {
+    border-radius: 15px;
+}
+
+input[type=file] {
+    border-radius: 0px;
+}
+
+input[type=color] {
+    border-radius: 0px;
+}
+
+input[type=range] {
+    appearance: none;
+    cursor: pointer;
+}
+
+button {
+    background-color: rgb(190, 121, 255);
+
+    border-radius: 20px;
+    border: 0% solid black;
+}
+
+#send {
+    width: 50%;
+    height: 125px;
+    margin-left: auto;
+    margin-right: auto;
+}
