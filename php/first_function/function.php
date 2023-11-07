@@ -11,7 +11,7 @@ function algorithmeEuclide2($nbr1, $nbr2)
 }
 function fonctionspecial($nombreDepart, $nombreElementsSouhaite)
 {
-    $suite = "" + $nombreDepart + "";
+    $suite = "" . $nombreDepart . " ";
     for ($i = 1; $i <= $nombreElementsSouhaite; $i++) {
         if ($nombreDepart < 5 && $nombreDepart % 3 != 0) {
             $nombreDepart = $nombreDepart * 5;
@@ -20,7 +20,7 @@ function fonctionspecial($nombreDepart, $nombreElementsSouhaite)
         } else {
             $nombreDepart = $nombreDepart * $nombreDepart;
         }
-        $suite = $suite + $nombreDepart + "";
+        $suite = $suite . $nombreDepart . " ";
     }
     return $suite;
 }
