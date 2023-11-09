@@ -32,6 +32,16 @@ require_once "function.php";
         <p>On ne creez pas de fonction mais on ecrit proprement la boucle php dans l'html <br>
             (On souhaite afficher la derniere lettre de chaque mot dans une liste à puces. On considère que chaque mot est suivi d'un espace sauf le dernier)</p>
         <p>Dans la variable $phrase "<?= $phrase ?>". La derniere lettre de chaque mot est</p>
+
+        <?php
+        $chars = explode(' ', $phrase);
+        for ($i = 0; $i < count($chars); $i++) : ?>
+            <?php $words = str_split($chars[$i]); ?>
+            <li>
+                <?= $words[strlen($chars[$i]) - 1] ?>
+            </li>
+        <?php endfor ?>
+
     </div>
 </body>
 
