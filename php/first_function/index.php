@@ -16,11 +16,13 @@ require_once "function.php";
     <link rel="icon" href="./image/iconSiteWeb.png">
     <link rel="stylesheet" href="./css/flex.css">
     <link rel="stylesheet" href="./css/style.css">
-    <h1>Apprendre les fonctions en php</h1>
 </head>
 
 <body>
-    <div>
+    <header>
+        <h1>Apprendre les fonctions en php</h1>
+    </header>
+    <div id="content">
         <h1>Teston les appel de fonctions</h1>
         <p>Je veux de belles fonctions php (séparer analyse et affichagedqns votre fichier)</p>
         <h3>Premiere fonction</h3>
