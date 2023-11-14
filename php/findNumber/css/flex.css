@@ -1,0 +1,31 @@
+.spaceAround {
+    justify-content: space-around;
+}
+
+.spaceBetween {
+    justify-content: space-between;
+}
+
+.flex {
+    display: flex;
+}
+
+.flexEnd {
+    justify-content: flex-end;
+}
+
+.warp {
+    flex-wrap: wrap;
+}
+
+.column {
+    flex-direction: column;
+}
+
+.centerV {
+    align-items: center;
+}
+
+.centerH {
+    justify-content: center;
+}
