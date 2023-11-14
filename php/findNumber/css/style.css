@@ -27,9 +27,15 @@ footer {
     border-top: 2px solid red;
 }
 
-#mess {
+#erreur {
     border: 5px solid red;
     background-color: lightcoral;
+    width: 20%;
+}
+
+#good {
+    border: 5px solid green;
+    background-color: lightgreen;
     width: 20%;
 }
 

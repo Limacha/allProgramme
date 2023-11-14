@@ -34,10 +34,17 @@ if (isset($_GET['number'])) {
             </div>
         </form>
     </div>
-
-    <div id="mess">
-        <p><?= $mess ?></p>
-    </div>
+    <?php
+    $chars = explode(' ', $mess);
+    if ($chars[0] == "Dommage") : ?>
+        <div id="erreur">
+            <p><?= $mess ?></p>
+        </div>
+    <?php elseif ($chars[0] == "Bien") : ?>
+        <div id="good">
+            <p><?= $mess ?></p>
+        </div>
+    <?php endif ?>
     <footer class="flex flexEnd">
         <p>Premier exercise GET 5TTI 2023</p>
     </footer>
