@@ -1,4 +1,17 @@
 <?php
+function findNumber($number, $goodNum)
+{
+    $mess = "";
+    if ($number == $goodNum) {
+        $mess = "Bien jouer s'est le bon numero";
+    } elseif ($number > $goodNum) {
+        $mess = "Dommage trop grand";
+    } else {
+        $mess = "Dommage trop petit";
+    }
+    return $mess;
+}
+
 function algorithmeEuclide2($nbr1, $nbr2)
 {
     $reste = $nbr2;
