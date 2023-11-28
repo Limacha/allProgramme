@@ -1,0 +1,63 @@
+h1 {
+    text-transform: capitalize;
+    color: white;
+}
+
+h3 {
+    text-transform: capitalize;
+    color: white;
+}
+
+body {
+    background-color: gray;
+}
+
+form {
+    border: 1px solid black;
+    background-color: black;
+    width: 25%;
+}
+
+button {
+    width: 40%;
+    height: 50px;
+}
+
+footer {
+    border-top: 2px solid red;
+}
+
+#rouge {
+    border: 5px solid red;
+    background-color: lightcoral;
+    width: 20%;
+}
+
+#orange {
+    border: 5px solid rgb(255, 106, 0);
+    background-color: rgb(255, 140, 57);
+    width: 20%;
+}
+
+#vert {
+    border: 5px solid green;
+    background-color: lightgreen;
+    width: 20%;
+}
+
+#blue {
+    border: 5px solid blue;
+    background-color: lightblue;
+    width: 20%;
+}
+
+#none {
+    border: 5px solid grey;
+    background-color: lightgrey;
+    width: 20%;
+}
+
+#Inum {
+    padding: 50px;
+    background-color: lightgray;
+}
