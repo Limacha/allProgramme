@@ -1,0 +1,14 @@
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\obj\Debug\net6.0\PonchautNicolas_Cryptage.GeneratedMSBuildEditorConfig.editorconfig
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\obj\Debug\net6.0\PonchautNicolas_Cryptage.AssemblyInfoInputs.cache
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\obj\Debug\net6.0\PonchautNicolas_Cryptage.AssemblyInfo.cs
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\obj\Debug\net6.0\PonchautNicolas_Cryptage.csproj.CoreCompileInputs.cache
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\bin\Debug\net6.0\PonchautNicolas_Cryptage.exe
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\bin\Debug\net6.0\PonchautNicolas_Cryptage.deps.json
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\bin\Debug\net6.0\PonchautNicolas_Cryptage.runtimeconfig.json
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\bin\Debug\net6.0\PonchautNicolas_Cryptage.dll
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\bin\Debug\net6.0\PonchautNicolas_Cryptage.pdb
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\obj\Debug\net6.0\PonchautNicolas_Cryptage.dll
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\obj\Debug\net6.0\refint\PonchautNicolas_Cryptage.dll
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\obj\Debug\net6.0\PonchautNicolas_Cryptage.pdb
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\obj\Debug\net6.0\PonchautNicolas_Cryptage.genruntimeconfig.cache
+G:\Mon Drive\cour\info\UAA11\ex\PonchautNicolas_Cryptage\obj\Debug\net6.0\ref\PonchautNicolas_Cryptage.dll
