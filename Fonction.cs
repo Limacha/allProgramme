@@ -235,6 +235,24 @@ namespace _5TTI_NicolasPonchaut_prosFonc
             return message;
         }
         /// <summary>
+        /// transformer une matrice en string
+        /// </summary>
+        /// <param name="matrice">matrice non null</param>
+        /// <returns>la matrice en string</returns>
+        public string matriceStringConcact(string[,] matrice)
+        {
+            string message = "";
+            for (int i = 0; i < matrice.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrice.GetLength(1); j++)
+                {
+                    message += matrice[i, j] + "; ";
+                }
+                message += "\n";
+            }
+            return message;
+        }
+        /// <summary>
         /// creez une matrice rempli de chiffre aleatoire
         /// </summary>
         /// <param name="width">largeur</param>
