@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">TEST</string>
+
+    <string name="bottom_home_item">home</string>
+    <string name="bottom_download_item">download</string>
+    <string name="bottom_liked_item">favoris</string>
+
+    <string name="home_page_title">What are you loking for?</string>
+    <string name="download_page_title">What do you want to watch?</string>
+    <string name="liked_page_title">This is what you liked</string>
+
+    <!-- commantaire -->
+    <string name="name_serie">name</string>
+    <string name="number_episode">0 episodes</string>
+    <string name="choise_what_you_want_to_watch">Choise what you want to watch!</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="connection">Connection</string>
+    <string name="sinscrire">s\'inscrire</string>
+    <string name="number_page">0 page</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="default_marge">20dp</dimen>
+    <dimen name="item_margin">10dp</dimen>
+    <dimen name="default_textSize">25sp</dimen>
+</resources>
