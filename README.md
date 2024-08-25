@@ -1,2 +1,2 @@
-# GithubprograNico
-Github pour stocker tous les code en raport avec l'ecole
+# all prog
+stock de tout les programmes que je compte reutiliser
