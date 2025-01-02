@@ -549,8 +549,8 @@
 },
   {
   "name": "pick_me_up",
-  "nb_episode": 90,
-  "last_chap": 90,
+  "nb_episode": 127,
+  "last_chap": 127,
   "img_epi":{},
   "imageFile": "android.resource://fr.myapplication/drawable/",
   "liked": true,
