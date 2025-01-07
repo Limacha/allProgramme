@@ -1,3 +1,4 @@
+---afficher une bare de boss a un mob---
 import net.minecraft.server.level.ServerBossEvent;	
 private final ServerBossEvent bossInfo = new ServerBossEvent(this.getDisplayName(), ServerBossEvent.BossBarColor.YELLOW, ServerBossEvent.BossBarOverlay.PROGRESS);  
   
@@ -12,3 +13,9 @@ public void stopSeenByPlayer(ServerPlayer player) {
 	super.stopSeenByPlayer(player);  
 	this.bossInfo.removePlayer(player);  
 }  
+---drop des items a la morts---
+protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHitIn) {
+	super.dropCustomDeathLoot(source, looting, recentlyHitIn);
+	this.spawnAtLocation(new ItemStack(TestModItems.POIVRO.get()));
+	this.spawnAtLocation(new ItemStack(Blocks.OBSIDIAN));
+}
