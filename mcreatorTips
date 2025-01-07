@@ -13,6 +13,7 @@ public void stopSeenByPlayer(ServerPlayer player) {
 	super.stopSeenByPlayer(player);  
 	this.bossInfo.removePlayer(player);  
 }  
+
 ---drop des items a la morts---
 protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHitIn) {
 	super.dropCustomDeathLoot(source, looting, recentlyHitIn);
