@@ -1,4 +1,4 @@
-creez une bare de vie comme les boss
+# creez une bare de vie comme les boss
 
 import net.minecraft.server.level.ServerBossEvent;	
 private final ServerBossEvent bossInfo = new ServerBossEvent(this.getDisplayName(), ServerBossEvent.BossBarColor.YELLOW, ServerBossEvent.BossBarOverlay.PROGRESS);
