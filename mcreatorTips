@@ -1,22 +1,26 @@
 ---afficher une bare de boss a un mob---
-import net.minecraft.server.level.ServerBossEvent;	
-private final ServerBossEvent bossInfo = new ServerBossEvent(this.getDisplayName(), ServerBossEvent.BossBarColor.YELLOW, ServerBossEvent.BossBarOverlay.PROGRESS);  
-  
-@Override
-public void startSeenByPlayer(ServerPlayer player) {  
-	super.startSeenByPlayer(player);  
-	this.bossInfo.addPlayer(player);  
-}  
-  
-@Override  
-public void stopSeenByPlayer(ServerPlayer player) {  
-	super.stopSeenByPlayer(player);  
-	this.bossInfo.removePlayer(player);  
-}  
-
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerPlayer;
+class{
+	private final ServerBossEvent bossInfo = new ServerBossEvent(this.getDisplayName(), ServerBossEvent.BossBarColor.YELLOW, ServerBossEvent.BossBarOverlay.PROGRESS);  
+	  
+	@Override
+	public void startSeenByPlayer(ServerPlayer player) {  
+		super.startSeenByPlayer(player);  
+		this.bossInfo.addPlayer(player);  
+	}  
+	  
+	@Override  
+	public void stopSeenByPlayer(ServerPlayer player) {  
+		super.stopSeenByPlayer(player);  
+		this.bossInfo.removePlayer(player);  
+	}  
+}
 ---drop des items a la morts---
-protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHitIn) {
-	super.dropCustomDeathLoot(source, looting, recentlyHitIn);
-	this.spawnAtLocation(new ItemStack(TestModItems.POIVRO.get()));
-	this.spawnAtLocation(new ItemStack(Blocks.OBSIDIAN));
+class {
+	protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHitIn) {
+		super.dropCustomDeathLoot(source, looting, recentlyHitIn);
+		this.spawnAtLocation(new ItemStack(TestModItems.POIVRO.get()));
+		this.spawnAtLocation(new ItemStack(Blocks.OBSIDIAN));
+	}
 }
