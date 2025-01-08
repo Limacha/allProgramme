@@ -16,6 +16,7 @@ public class RatataEntity extends Monster {
 		this.bossInfo.removePlayer(player);  
 	}  
 }
+
 ---drop des items a la morts---
 public class RatataEntity extends Monster {
 	protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHitIn) {
@@ -24,11 +25,13 @@ public class RatataEntity extends Monster {
 		this.spawnAtLocation(new ItemStack(Blocks.OBSIDIAN));
 	}
 }
+
 ---Ratata au dessus de eux si on a la souris sur eux----
 public RatataEntity(EntityType<RatataEntity> type, Level world) {
 	setCustomName(Component.literal("Ratata"));
 	setCustomNameVisible(false);
 }
+
 ---fait que le ratata attack le joueur le plus proche---
 public class RatataEntity extends Monster {
 	@Override
@@ -48,17 +51,27 @@ public class RatataEntity extends Monster {
 
 	}
 }
+
 ---envoie un message a tous les joueurs du serveur---
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.network.chat.Component;
+
 public static void execute(LevelAccessor world, String message) {
 	if (!world.isClientSide() && world.getServer() != null)
 		world.getServer().getPlayerList().broadcastSystemMessage(Component.literal(message), false);
 }
+
 ---envoie un message a l'entity---
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.network.chat.Component;
+
 public static void execute(Entity sourceentity, String message) {
 	if (sourceentity instanceof Player _player && !_player.level().isClientSide())
 		_player.displayClientMessage(Component.literal(message), false);
 
 }
+
 ---summon un mob---
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.entity.MobSpawnType;
