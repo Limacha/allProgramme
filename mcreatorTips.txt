@@ -1,7 +1,7 @@
 ---afficher une bare de boss a un mob---
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
-class{
+public class RatataEntity extends Monster {
 	private final ServerBossEvent bossInfo = new ServerBossEvent(this.getDisplayName(), ServerBossEvent.BossBarColor.YELLOW, ServerBossEvent.BossBarOverlay.PROGRESS);  
 	  
 	@Override
@@ -17,10 +17,15 @@ class{
 	}  
 }
 ---drop des items a la morts---
-class {
+public class RatataEntity extends Monster {
 	protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHitIn) {
 		super.dropCustomDeathLoot(source, looting, recentlyHitIn);
 		this.spawnAtLocation(new ItemStack(TestModItems.POIVRO.get()));
 		this.spawnAtLocation(new ItemStack(Blocks.OBSIDIAN));
 	}
+}
+---Ratata au dessus de eux si on a la souris sur eux----
+public RatataEntity(EntityType<RatataEntity> type, Level world) {
+	setCustomName(Component.literal("Ratata"));
+	setCustomNameVisible(false);
 }
