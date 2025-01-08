@@ -49,7 +49,13 @@ public class RatataEntity extends Monster {
 	}
 }
 ---envoie un message a tous les joueurs du serveur---
-public static void execute(LevelAccessor world) {
+public static void execute(LevelAccessor world, String message) {
 	if (!world.isClientSide() && world.getServer() != null)
 		world.getServer().getPlayerList().broadcastSystemMessage(Component.literal(message), false);
+}
+---envoie un message a l'entity---
+public static void execute(Entity sourceentity, String message) {
+	if (sourceentity instanceof Player _player && !_player.level().isClientSide())
+		_player.displayClientMessage(Component.literal(message), false);
+
 }
