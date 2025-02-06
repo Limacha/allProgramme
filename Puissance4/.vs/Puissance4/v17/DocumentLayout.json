@@ -1,0 +1,117 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|c:\\users\\nico\\documents\\github\\allprogramme\\puissance4\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|solutionrelative:mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|c:\\users\\nico\\documents\\github\\allprogramme\\puissance4\\views\\menustart.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|solutionrelative:views\\menustart.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|c:\\users\\nico\\documents\\github\\allprogramme\\puissance4\\views\\game.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|solutionrelative:views\\game.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|c:\\users\\nico\\documents\\github\\allprogramme\\puissance4\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|c:\\users\\nico\\documents\\github\\allprogramme\\puissance4\\views\\game.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|solutionrelative:views\\game.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|c:\\users\\nico\\documents\\github\\allprogramme\\puissance4\\views\\menustart.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BB4387C7-0805-4717-8334-2A4490A5A1C7}|Puissance4.csproj|solutionrelative:views\\menustart.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Game.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\views\\Game.xaml.cs",
+              "RelativeDocumentMoniker": "views\\Game.xaml.cs",
+              "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\views\\Game.xaml.cs",
+              "RelativeToolTip": "views\\Game.xaml.cs",
+              "ViewState": "AQIAAA8AAAAAAAAAAAAAABkAAAAcAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-30T12:36:14.274Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MenuStart.xaml",
+              "DocumentMoniker": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\views\\MenuStart.xaml",
+              "RelativeDocumentMoniker": "views\\MenuStart.xaml",
+              "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\views\\MenuStart.xaml",
+              "RelativeToolTip": "views\\MenuStart.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-01-30T10:13:12.21Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "MenuStart.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\views\\MenuStart.xaml.cs",
+              "RelativeDocumentMoniker": "views\\MenuStart.xaml.cs",
+              "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\views\\MenuStart.xaml.cs",
+              "RelativeToolTip": "views\\MenuStart.xaml.cs",
+              "ViewState": "AQIAAA8AAAAAAAAAAAAAAB0AAABBAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-30T10:11:10.809Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Game.xaml",
+              "DocumentMoniker": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\views\\Game.xaml",
+              "RelativeDocumentMoniker": "views\\Game.xaml",
+              "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\views\\Game.xaml",
+              "RelativeToolTip": "views\\Game.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-01-30T10:06:04.303Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "MainWindow.xaml",
+              "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\MainWindow.xaml",
+              "RelativeToolTip": "MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-01-30T09:57:15.096Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\Puissance4\\MainWindow.xaml.cs",
+              "RelativeToolTip": "MainWindow.xaml.cs",
+              "ViewState": "AQIAAAsAAAAAAAAAAAAqwBUAAAAiAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-30T09:57:11.792Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
