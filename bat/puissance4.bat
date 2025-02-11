@@ -58,19 +58,39 @@ goto menu
 
 :puissance4
 cls
-powershell -Command "& { Add-Type -AssemblyName System.Windows.Forms; $mainForm = New-Object System.Windows.Forms.Form; $mainForm.Text = 'puissance 4'; $lbl = New-Object System.Windows.Forms.Label; $lbl.Text = 'fuckkkkkk?'; $mainForm.Controls.Add($lbl); $mainForm.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen; $mainForm.ShowDialog();}"
+
 goto menu
 
 :try
-cls  
+cls
+rem fenetre
 powershell -Command ^
  Add-Type -AssemblyName System.Windows.Forms;^
  $mainForm = New-Object System.Windows.Forms.Form;^
  $mainForm.Text = 'puissance 4';^
+ $mainForm.Width = 600;^
+ $mainForm.Height = 400;^
+ $mainForm.StartPosition = 'CenterScreen';^
  $lbl = New-Object System.Windows.Forms.Label;^
- $lbl.Text = 'fuckkkkkk?'; $mainForm.Controls.Add($lbl);^
- $mainForm.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen; $mainForm.ShowDialog();
+ $lbl.Text = 'Hey man do you want to play to p4 with me?';^
+ $lbl.AutoSize = $true;^
+ $lbl.TextAlign = 'MiddleRight';^
+ $mainForm.Controls.Add($lbl);^
+ $lbl = New-Object System.Windows.Forms.Label;^
+ $lbl.Text = 'Hey man do you want to play to p4 with me?';^
+ $lbl.Location = New-Object System.Drawing.Point(0,25);^
+ $mainForm.Controls.Add($lbl);^
+ $button = New-Object System.Windows.Forms.Button;^
+ $button.Text = 'Play';^
+ $button.Size = New-Object System.Drawing.Size(50,20);^
+ $button.Location = New-Object System.Drawing.Point(5,50);^
+ $button.Add_Click({^
+	$lbl.Text = 'width:' + $mainForm.Width + ' ' + 'height:' + $mainForm.Height;^
+ });^
+ $mainForm.Controls.Add($button);^
+ $mainForm.ShowDialog();
  
+rem Notification 
 powershell -Command ^
   Add-Type -AssemblyName System.Windows.Forms;^
   Add-Type -AssemblyName System.Drawing;^
