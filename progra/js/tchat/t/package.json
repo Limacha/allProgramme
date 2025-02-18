@@ -1,0 +1,30 @@
+{
+  "name": "tchat",
+  "version": "0.0.1",
+  "main": "index.js",
+  "bin": "index.js",
+  "scripts": {
+    "build": "pkg package.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "pkg": {
+    "scripts": [
+      "assets/scripts/**/*.js"
+    ],
+    "assets": [
+      "assets/json/**/*.json"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": ""
+  },
+  "keywords": [],
+  "author": "Lima",
+  "license": "ISC",
+  "description": "test of futur chat",
+  "dependencies": {
+    "mysql": "^2.18.1",
+    "pkg": "^5.8.1"
+  }
+}

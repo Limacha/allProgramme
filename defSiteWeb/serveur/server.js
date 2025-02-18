@@ -1,7 +1,7 @@
 const http = require("http");
 const url = require("url");
 
-const { ReadUTF8File, verifJavaScriptError } = require("../fonction.js");
+const { ReadUTF8File, VerifJavaScriptError } = require("../fonction.js");
 
 /**
  * fait un serveur qui tourne sur host:port avec
@@ -47,12 +47,23 @@ function LaunchServ(port, host) {
             let script = "";
             try {
                 script = await ReadUTF8File("./client/js/" + parsedUrl.pathname + ".js");
-                const error = verifJavaScriptError(script);
+                const error = VerifJavaScriptError(script);
                 if (error) {
                     script = "console.log('script as an error: " + error + "');";
                 }
             } catch {
                 script = "console.log('script not found at: ./client/js/" + parsedUrl.pathname + ".js');";
+            }
+
+            let css = "";
+            try {
+                css = await ReadUTF8File("./client/css/" + parsedUrl.pathname + ".css");
+            } catch {
+                try {
+                    css = await ReadUTF8File("./client/css/404.css");
+                } catch {
+                    css = "";
+                }
             }
 
             //remplacement dans le fichier envoie au serveur
@@ -61,6 +72,9 @@ function LaunchServ(port, host) {
             baseHtml = baseHtml.replace("$footer$", footerHtml);
 
             baseHtml = baseHtml.replace("$script$", script);
+
+            // /* $css$ */ car sinon erreur qui sa fiche
+            baseHtml = baseHtml.replace("/* $css$ */", css);
 
             //evoie des fichier
             res.writeHead(200);
@@ -74,10 +88,14 @@ function LaunchServ(port, host) {
             //dans les deux cas dis que la reponse est fini
             res.end();
         }
+        if (!res.closed) {
+            res.end();
+        }
     });
     //renvoie le serveur pour l'utiliser autre part
     return server;
 }
+
 
 /**
  * retire tous les listeners lier au nom
@@ -101,4 +119,13 @@ function SimulateError(server, delay) {
     }
 }
 
-module.exports = { LaunchServ, RemoveListener, SimulateError };
+/**
+ * ferme le server http et toute les connections lier
+ * @param {http.Server} server 
+ */
+function CloseServer(server) {
+    server.close();
+    server.closeAllConnections();
+}
+
+module.exports = { LaunchServ, RemoveListener, SimulateError, CloseServer };

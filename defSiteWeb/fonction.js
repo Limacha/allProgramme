@@ -1,5 +1,6 @@
 const fs = require('fs');
 const vm = require('vm');
+const url = require('url');
 
 /**
  * lis un fichier avec le format utf-8
@@ -40,7 +41,7 @@ function ReadNoFormatFile(url) {
  * @param {string} code le code a verifier
  * @returns l'erreur si il y en a une
  */
-function verifJavaScriptError(code) {
+function VerifJavaScriptError(code) {
     try {
         // Vérifier si c'est du JavaScript valide en compilant le code
         new vm.Script(code);
@@ -54,4 +55,13 @@ function verifJavaScriptError(code) {
     }
 }
 
-module.exports = { ReadUTF8File, ReadNoFormatFile, verifJavaScriptError };
+/**
+ * parse un url en obj pour l'utiliser plus facilement
+ * @param {String} lien l'url a parsed 
+ * @returns l'url parser
+ */
+function ParseUrl(lien) {
+    return url.parse(lien, true);
+}
+
+module.exports = { ReadUTF8File, ReadNoFormatFile, VerifJavaScriptError, ParseUrl };

@@ -1,0 +1,23 @@
+{
+  "name": "testn",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin": "index.js",
+  "scripts": {
+    "pack": "electron-builder --windows",
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "lima",
+  "license": "ISC",
+  "description": "testn",
+  "devDependencies": {
+    "electron": "^31.3.1",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "androidjs": "^2.0.6",
+    "mysql": "^2.18.1"
+  }
+}
