@@ -1,0 +1,15 @@
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.csproj.AssemblyReference.cache
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.RATClient.resources
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.Form1.resources
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.Properties.Resources.resources
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.RATServer.resources
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.csproj.GenerateResource.cache
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.csproj.CoreCompileInputs.cache
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\bin\Debug\RATWinFormApp1.exe
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\bin\Debug\RATWinFormApp1.pdb
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.exe
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.pdb
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.server.File.resources
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.server.Main.resources
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.server.Cmd.resources
+C:\Users\Nico\Documents\github\allProgramme\RAT\c#\RATWinFormApp1\obj\Debug\RATWinFormApp1.server.FormStream.resources

@@ -1,0 +1,5 @@
+C:\Users\Nico\Documents\github\allProgramme\RAT\TestRatCmd1\bin\Release\net6.0\publish\TestRatCmd1.exe
+C:\Users\Nico\Documents\github\allProgramme\RAT\TestRatCmd1\bin\Release\net6.0\publish\TestRatCmd1.dll
+C:\Users\Nico\Documents\github\allProgramme\RAT\TestRatCmd1\bin\Release\net6.0\publish\TestRatCmd1.deps.json
+C:\Users\Nico\Documents\github\allProgramme\RAT\TestRatCmd1\bin\Release\net6.0\publish\TestRatCmd1.runtimeconfig.json
+C:\Users\Nico\Documents\github\allProgramme\RAT\TestRatCmd1\bin\Release\net6.0\publish\TestRatCmd1.pdb

@@ -1,0 +1,10 @@
+C:\Users\Nico\Documents\github\allProgramme\puissance4\bin\Debug\puissance4.exe.config
+C:\Users\Nico\Documents\github\allProgramme\puissance4\bin\Debug\puissance4.exe
+C:\Users\Nico\Documents\github\allProgramme\puissance4\bin\Debug\puissance4.pdb
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Debug\puissance4.csproj.AssemblyReference.cache
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Debug\puissance4.Form1.resources
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Debug\puissance4.Properties.Resources.resources
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Debug\puissance4.csproj.GenerateResource.cache
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Debug\puissance4.csproj.CoreCompileInputs.cache
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Debug\puissance4.exe
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Debug\puissance4.pdb

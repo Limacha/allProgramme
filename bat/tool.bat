@@ -29,6 +29,8 @@ echo [38;2;255;204;0m╠═(7) wlan profil key clear
 echo [38;2;255;204;0m║
 echo [38;2;255;204;0m╠═(8) weather
 echo [38;2;255;204;0m║
+echo [38;2;255;204;0m╠═(9) show all file
+echo [38;2;255;204;0m║
 set /p input=[38;2;255;204;0m╚══════^>
 if /I %input% EQU 0 cls & goto menu
 if /I %input% EQU 1 goto copyArch
@@ -39,6 +41,7 @@ if /I %input% EQU 5 goto showFile
 if /I %input% EQU 6 goto wlanProfile
 if /I %input% EQU 7 goto wlanKeyClear
 if /I %input% EQU 8 goto weather
+if /I %input% EQU 9 goto showAllFile
 
 goto start
 
@@ -135,6 +138,11 @@ if %contry% EQU "" echo no input & goto menu
 set url=wttr.in/%contry%
 echo %url%
 curl %url%
+goto menu
+
+:showAllFile
+cls
+attrib /D
 goto menu
 
 :banner
