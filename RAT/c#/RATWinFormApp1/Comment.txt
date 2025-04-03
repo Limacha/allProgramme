@@ -1,5 +1,0 @@
-﻿Thread sa permet de faire des tache en parallele le main est un thread
-
-le tableau, ou on commence, ou on termine
-stream.write ajoute des bite au flux
-stream.read lit des bite a partir du moment ou il s'est arreter

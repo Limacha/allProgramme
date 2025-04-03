@@ -3,16 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\game.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|c:\\users\\nico\\documents\\github\\allprogramme\\puissance4\\game.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|solutionrelative:game.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|c:\\users\\nico\\documents\\github\\allprogramme\\puissance4\\game.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "AbsoluteMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\game.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|solutionrelative:game.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|solutionrelative:home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{E3A22583-BC69-4CD3-B8CB-C2D3518F4AC1}|puissance4.csproj|solutionrelative:home.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,8 +26,20 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 2,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Home.cs",
+              "DocumentMoniker": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\Home.cs",
+              "RelativeDocumentMoniker": "Home.cs",
+              "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\Home.cs",
+              "RelativeToolTip": "Home.cs",
+              "ViewState": "AQIAAGsAAAAAAAAAAAAcwKoAAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-18T12:29:38.008Z"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
@@ -44,19 +60,19 @@
               "RelativeDocumentMoniker": "Game.cs",
               "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\Game.cs",
               "RelativeToolTip": "Game.cs",
-              "ViewState": "AQIAACYAAAAAAAAAAAAuwBUAAAAAAAAA",
+              "ViewState": "AQIAAOgAAAAAAAAAAAAewO8AAAAVAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-13T09:59:01.733Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Form1.cs [Design]",
-              "DocumentMoniker": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\Form1.cs",
-              "RelativeDocumentMoniker": "Form1.cs",
-              "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\Form1.cs [Design]",
-              "RelativeToolTip": "Form1.cs [Design]",
+              "DocumentIndex": 3,
+              "Title": "Home.cs [Design]",
+              "DocumentMoniker": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\Home.cs",
+              "RelativeDocumentMoniker": "Home.cs",
+              "ToolTip": "C:\\Users\\Nico\\Documents\\github\\allProgramme\\puissance4\\Home.cs [Design]",
+              "RelativeToolTip": "Home.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-13T09:57:00.82Z"
             }

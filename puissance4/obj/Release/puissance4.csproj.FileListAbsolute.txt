@@ -1,0 +1,15 @@
+C:\Users\Nico\Documents\github\allProgramme\puissance4\bin\Release\puissance4.exe.config
+C:\Users\Nico\Documents\github\allProgramme\puissance4\bin\Release\puissance4.exe
+C:\Users\Nico\Documents\github\allProgramme\puissance4\bin\Release\puissance4.pdb
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.csproj.AssemblyReference.cache
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.Game.resources
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.Properties.Resources.resources
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.csproj.GenerateResource.cache
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.csproj.CoreCompileInputs.cache
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.exe
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.pdb
+C:\Users\Nico\Documents\github\allProgramme\puissance4\bin\Release\puissance4.exe.manifest
+C:\Users\Nico\Documents\github\allProgramme\puissance4\bin\Release\puissance4.application
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.exe.manifest
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.application
+C:\Users\Nico\Documents\github\allProgramme\puissance4\obj\Release\puissance4.Home.resources
