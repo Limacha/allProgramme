@@ -1,2 +1,0 @@
-C:\Users\Nico\Documents\github\allProgramme\RAT\TestRatCmd1\bin\Release\net6.0\publish\win-x64\TestRatCmd1.pdb
-C:\Users\Nico\Documents\github\allProgramme\RAT\TestRatCmd1\bin\Release\net6.0\publish\win-x64\TestRatCmd1.exe
