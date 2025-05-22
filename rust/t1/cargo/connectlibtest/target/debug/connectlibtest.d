@@ -1,0 +1,1 @@
+C:\Users\Nico\Documents\github\allProgramme\rust\t1\cargo\connectlibtest\target\debug\connectlibtest.exe: C:\Users\Nico\Documents\github\allProgramme\rust\t1\cargo\bibliorusttest\src\lib.rs C:\Users\Nico\Documents\github\allProgramme\rust\t1\cargo\connectlibtest\src\main.rs
