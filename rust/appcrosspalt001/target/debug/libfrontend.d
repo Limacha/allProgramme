@@ -1,0 +1,1 @@
+C:\Users\Nico\Documents\github\allProgramme\rust\appcrosspalt001\target\debug\libfrontend.rlib: C:\Users\Nico\Documents\github\allProgramme\rust\appcrosspalt001\backend\src\lib.rs C:\Users\Nico\Documents\github\allProgramme\rust\appcrosspalt001\frontend\src\lib.rs C:\Users\Nico\Documents\github\allProgramme\rust\appcrosspalt001\frontend\src\native.rs

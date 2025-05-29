@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["tracing",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.87.0/core/ops/drop/trait.Drop.html\" title=\"trait core::ops::drop::Drop\">Drop</a> for <a class=\"struct\" href=\"tracing/span/struct.EnteredSpan.html\" title=\"struct tracing::span::EnteredSpan\">EnteredSpan</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.87.0/core/ops/drop/trait.Drop.html\" title=\"trait core::ops::drop::Drop\">Drop</a> for <a class=\"struct\" href=\"tracing/struct.Span.html\" title=\"struct tracing::Span\">Span</a>"],["impl&lt;'a&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.87.0/core/ops/drop/trait.Drop.html\" title=\"trait core::ops::drop::Drop\">Drop</a> for <a class=\"struct\" href=\"tracing/span/struct.Entered.html\" title=\"struct tracing::span::Entered\">Entered</a>&lt;'a&gt;"],["impl&lt;T&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.87.0/core/ops/drop/trait.Drop.html\" title=\"trait core::ops::drop::Drop\">Drop</a> for <a class=\"struct\" href=\"tracing/instrument/struct.Instrumented.html\" title=\"struct tracing::instrument::Instrumented\">Instrumented</a>&lt;T&gt;"]]],["winit",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.87.0/core/ops/drop/trait.Drop.html\" title=\"trait core::ops::drop::Drop\">Drop</a> for <a class=\"struct\" href=\"winit/window/struct.Window.html\" title=\"struct winit::window::Window\">Window</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[1130,274]}
