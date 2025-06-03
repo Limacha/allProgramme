@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "backend",
+    "frontend",
+    "unified_runner"
+]
+resolver = "3"

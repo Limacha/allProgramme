@@ -1,0 +1,22 @@
+[package]
+name = "frontend"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+backend = { path = "../backend" }
+#optional active que si une features l'appel
+#pixels = { version = "0.15", optional = true }
+#winit = { version = "0.30.11", optional = true }
+#wasm-bindgen = { version = "0.2", optional = true }
+winit = "0.30.11"
+pixels = "0.15.0"
+wasm-bindgen = "0.2"
+
+#[features]
+#default = []
+#native = ["winit", "pixels]
+#web = ["wasm-bindgen"]
