@@ -8,12 +8,15 @@ use winit::{
     window::{Window, WindowAttributes},
 };
 
+//task bar buton width 0,01579861
+//task bar buton heigth 0,01728395
 pub struct App {
     // Option signifie que la valeur peut être présente (Some) ou absente (None).
     window: Option<Window>,              //la fenetre en question
     pixels: Option<Pixels<'static>>, // Gestionnaire du rendu graphique, lié à la fenêtre. Le lifetime 'static garantit que la référence à la fenêtre reste valide aussi longtemps que Pixels existe.
     size: PhysicalSize<u32>,         //taile en pixels reels sur l'ecran
     window_attributes: WindowAttributes, //les attributs de la fenetre
+    buffer: PixelBuffer,             //les attributs de la fenetre
 }
 
 impl App {
@@ -21,27 +24,28 @@ impl App {
     ///
     /// Initialise les attributs de la fenêtre, mais sans créer la fenêtre ni le rendu.
     ///
-    /// # Arguments
-    ///
     /// * `title` - Le titre de la fenêtre.
     /// * `size` - La taille logique initiale de la fenêtre (en unités indépendantes du DPI).
     ///
-    /// # Retour
-    ///
-    /// * `Self` - Une instance de `App` avec la configuration initialisée,  
+    /// -> `Self` - Une instance de `App` avec la configuration initialisée,  
     ///   mais sans fenêtre ni rendu encore créés.
-    pub fn new(title: &str, size: LogicalSize<f64>, decorations: bool) -> Self {
+    pub fn new(title: &str, size: LogicalSize<u32>, decorations: bool) -> Self {
         //creez tous les attributs de la fenetre
         let window_attributes: WindowAttributes = Window::default_attributes()
             .with_title(title) //titre de la fenetre
             .with_inner_size(size) //taille de la fenetre en physic
             .with_decorations(decorations); //si on affiche la barre de titre
 
+        let mut buffer: PixelBuffer = PixelBuffer::new(size.width, size.height);
+        buffer.FillAll(150, 0, 100, 255);
+        buffer.DrawCenterSquare(50, 255, 0, 0, 255);
+
         Self {
-            window: None,                      //pas de fenetre creez
-            pixels: None,                      // L'interface de rendu n'est pas encore initialisée.
-            size: PhysicalSize::new(128, 128), //la taille physique de la fenetre
-            window_attributes,                 //les attributs de la fenetre
+            window: None,                                     //pas de fenetre creez
+            pixels: None, // L'interface de rendu n'est pas encore initialisée.
+            size: PhysicalSize::new(size.width, size.height), //la taille physique de la fenetre
+            window_attributes, //les attributs de la fenetre
+            buffer,
         }
     }
 }
@@ -96,14 +100,12 @@ impl ApplicationHandler for App {
                             "reaffichage width:{}, height{}",
                             self.size.width, self.size.height
                         );
+
+                        self.buffer.SetSize(self.size.width, self.size.height);
+
                         let frame: &mut [u8] = pixels.frame_mut(); //buffer mutable des pixel
 
-                        let mut buffer: PixelBuffer =
-                            PixelBuffer::new(self.size.width, self.size.height); //cree un nouveau buffer
-                        buffer.pixels.fill(0); //remplit de noir
-                        buffer.draw_center_square(50, 255, 0, 0, 255); //dessine un carre
-
-                        frame.copy_from_slice(&buffer.pixels); //copy les pixels sur le rendu
+                        frame.copy_from_slice(&self.buffer.pixels); //copy les pixels sur le rendu
                         pixels.render().unwrap(); //l'envoie a l'ecran
                     }
                     _ => {
@@ -137,8 +139,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///   sinon une erreur encapsulée dans un `Box`.
 pub fn launch_new_app(
     title: &str,
-    width: f64,
-    height: f64,
+    width: u32,
+    height: u32,
     decorations: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = EventLoop::new()?;
