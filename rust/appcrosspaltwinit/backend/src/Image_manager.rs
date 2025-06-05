@@ -10,11 +10,9 @@ impl ImageManager {
     /// - Pour les PNG, elle détecte le format mais ne les décode pas.
     /// - Pour les BMP, elle décode manuellement l'image en supposant un format 32 bits.
     /// Retourne `Ok(Some(PixelBuffer))` si l'image est décodée avec succès, sinon `Ok(None)` ou une erreur.
-    pub fn ReadIco() -> std::io::Result<Option<PixelBuffer>> {
+    pub fn ReadIco(path: &str) -> std::io::Result<Option<PixelBuffer>> {
         // Ouvre le fichier ICO à un chemin spécifique
-        let mut file = File::open(
-            "C:\\Users\\Nico\\Documents\\github\\allProgramme\\rust\\appcrosspaltwinit\\backend\\src\\image.ico",
-        )?;
+        let mut file = File::open(path)?;
 
         // Lire les 6 octets d'en-tête ICO (Reserved, Type, Count)
         let mut header = [0u8; 6];

@@ -27,6 +27,9 @@ pub struct App {
     ///la hauteur du menu
     menuH: u32,
 
+    ///la marge entre les bouttons du menu
+    margeXButtonMenu: u32,
+
     ///le facteur pour logic -> physic
     scaleFactor: f64,
 
@@ -64,6 +67,7 @@ impl App {
             pixels: None,
             size: PhysicalSize::new(size.width, size.height),
             menuH: 50,
+            margeXButtonMenu: 10,
             scaleFactor: 1.0,
             window_attributes,
             buffer,
@@ -94,11 +98,14 @@ impl ApplicationHandler for App {
                 self.menuH = (((monitor.size().height as f64 * 0.01728395) * self.scaleFactor)
                     as u32)
                     .max(self.menuH);
-
-                window.set_min_inner_size(Some(PhysicalSize::new(self.menuH * 4, self.menuH * 2)));
+                self.margeXButtonMenu = (self.menuH / 5) as u32;
+                window.set_min_inner_size(Some(PhysicalSize::new(
+                    self.menuH * 4 + self.margeXButtonMenu * 3,
+                    self.menuH * 2,
+                )));
             }
 
-            None => window.set_min_inner_size(Some(PhysicalSize::new(200, 100))),
+            None => window.set_min_inner_size(Some(PhysicalSize::new(230, 100))),
         }
 
         self.pixels = Some(pixels);
@@ -126,6 +133,7 @@ impl ApplicationHandler for App {
                         {
                             eprintln!("Erreur lors du redimensionnement du buffer : {e}");
                         } else {
+                            self.buffer.SetSize(self.size.width, self.size.height);
                             self.size = new_size;
                             window.request_redraw();
                         }
@@ -135,19 +143,10 @@ impl ApplicationHandler for App {
                             "reaffichagee width:{}, height:{}",
                             self.size.width, self.size.height
                         );
-
-                        self.buffer.DrawFullRect(
-                            0,
-                            0,
-                            self.size.width,
-                            (self.size.height as f64 * 0.01728395) as u32,
-                            [255, 255, 255, 255],
-                        );
-
                         self.buffer.SetSize(self.size.width, self.size.height);
 
-                        /* #region */
-                        //dessine le menu
+                        /* #region menu */
+                        //dessine le fond du menu
                         self.buffer.DrawFullRect(
                             0,
                             0,
@@ -156,11 +155,40 @@ impl ApplicationHandler for App {
                             [255, 255, 255, 255],
                         );
 
+                        //dessine l'icon
+                        let bufferIcon = ImageManager::ReadIco(
+                            "C:\\Users\\Nico\\Documents\\github\\allProgramme\\rust\\appcrosspaltwinit\\frontend\\assets\\img\\mcColors.ico",
+                        );
+                        match bufferIcon {
+                            Ok(Some(bufferIcon)) => {
+                                self.buffer.DrawIntoArea(
+                                    &bufferIcon,
+                                    (self.menuH - (self.menuH - 20)) / 2,
+                                    (self.menuH - (self.menuH - 20)) / 2,
+                                    self.menuH - 20,
+                                    self.menuH - 20,
+                                );
+                            }
+                            _ => println!("no icon found"),
+                        }
+
+                        //dessine le tirer du boutton minimize
+                        self.buffer.DrawFullRect(
+                            self.size.width - (self.menuH * 3) - (self.margeXButtonMenu * 2)
+                                + (self.menuH - (self.menuH - 30)) / 2,
+                            (self.menuH - 4) / 2,
+                            self.menuH - 30,
+                            4,
+                            [0, 0, 0, 255],
+                        );
+
+                        //dessine le carer du boutton full screen
                         self.buffer.DrawBorder(
-                            self.size.width - (self.menuH * 2) + 10,
-                            10,
-                            self.menuH - 20,
-                            self.menuH - 20,
+                            self.size.width - (self.menuH * 2) - (self.margeXButtonMenu)
+                                + (self.menuH - (self.menuH - 30)) / 2,
+                            (self.menuH - (self.menuH - 30)) / 2,
+                            self.menuH - 30,
+                            self.menuH - 30,
                             2,
                             2,
                             2,
@@ -168,14 +196,12 @@ impl ApplicationHandler for App {
                             [0, 0, 0, 255],
                         );
 
-                        self.buffer
-                            .DrawBorder(10, 10, 20, 20, 2, 2, 2, 2, [0, 0, 0, 255]);
-
+                        //dessine la croix du boutton fermer
                         self.buffer.DrawCross(
-                            self.size.width - (self.menuH) + 10,
-                            10,
-                            self.menuH - 20,
-                            self.menuH - 20,
+                            self.size.width - (self.menuH) + (self.menuH - (self.menuH - 30)) / 2,
+                            (self.menuH - (self.menuH - 30)) / 2,
+                            self.menuH - 30,
+                            self.menuH - 30,
                             3,
                             [0, 0, 0, 255],
                         );
@@ -225,7 +251,6 @@ pub fn launch_new_app(
     height: u32,
     decorations: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let _ = ImageManager::ReadIco();
     let event_loop = EventLoop::new()?;
     let mut app = App::new(title, LogicalSize::new(width, height), decorations);
     event_loop.run_app(&mut app)?;

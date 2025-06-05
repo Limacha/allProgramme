@@ -158,7 +158,9 @@ impl ApplicationHandler for App {
                         );
 
                         //dessine l'icon
-                        let bufferIcon = ImageManager::ReadIco();
+                        let bufferIcon = ImageManager::ReadIco(
+                            "C:\\Users\\Nico\\Documents\\github\\allProgramme\\rust\\appcrosspaltwinit\\frontend\\assets\\img\\mcColors.ico",
+                        );
                         match bufferIcon {
                             Ok(Some(bufferIcon)) => {
                                 self.buffer.DrawIntoArea(
