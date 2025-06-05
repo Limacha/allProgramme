@@ -5,18 +5,21 @@ edition = "2024"
 
 [lib]
 path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 backend = { path = "../backend" }
 #optional active que si une features l'appel
-#pixels = { version = "0.15", optional = true }
-#winit = { version = "0.30.11", optional = true }
-#wasm-bindgen = { version = "0.2", optional = true }
-winit = "0.30.11"
-pixels = "0.15.0"
-wasm-bindgen = "0.2"
+pixels = { version = "0.15", optional = true }
+winit = { version = "0.30.11", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
+#winit = "0.30.11"
+#pixels = "0.15.0"
+#wasm-bindgen = "0.2"
+#web-sys = { version = "0.3", features = ["CanvasRenderingContext2d", "HtmlCanvasElement", "ImageData", "Window", "Document"] }
 
-#[features]
-#default = []
-#native = ["winit", "pixels]
-#web = ["wasm-bindgen"]
+
+[features]
+default = []
+native = ["winit", "pixels"]
+web = ["wasm-bindgen"]

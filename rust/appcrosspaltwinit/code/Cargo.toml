@@ -1,0 +1,15 @@
+[package]
+name = "code"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+backend = { path = "../backend" }
+winit = "0.30.11"
+pixels = "0.15.0"
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ["CanvasRenderingContext2d", "HtmlCanvasElement", "ImageData", "Window", "Document"] }

@@ -6,3 +6,8 @@ edition = "2024"
 [dependencies]
 backend = { path = "../backend" }
 frontend = { path = "../frontend" }
+
+[features]
+default = []
+native = ["frontend/native"]
+web = ["frontend/web"]

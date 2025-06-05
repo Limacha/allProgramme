@@ -2,6 +2,7 @@
 members = [
     "backend",
     "frontend",
-    "unified_runner"
+    "unified_runner",
+    "code"
 ]
 resolver = "3"

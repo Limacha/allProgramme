@@ -1,22 +1,45 @@
-use backend::PixelBuffer;
+#![cfg(not(target_arch = "wasm32"))]
+#![cfg(feature = "native")]
 use pixels::{Pixels, SurfaceTexture};
 use winit::{
     application::ApplicationHandler,
     dpi::{LogicalSize, PhysicalSize},
     event::WindowEvent,
     event_loop::{ActiveEventLoop, EventLoop},
+    monitor::MonitorHandle,
     window::{Window, WindowAttributes},
 };
+
+use backend::{Image_manager::*, Pixel_buffer::*};
 
 //task bar buton width 0,01579861
 //task bar buton heigth 0,01728395
 pub struct App {
     // Option signifie que la valeur peut être présente (Some) ou absente (None).
-    window: Option<Window>,              //la fenetre en question
-    pixels: Option<Pixels<'static>>, // Gestionnaire du rendu graphique, lié à la fenêtre. Le lifetime 'static garantit que la référence à la fenêtre reste valide aussi longtemps que Pixels existe.
-    size: PhysicalSize<u32>,         //taile en pixels reels sur l'ecran
-    window_attributes: WindowAttributes, //les attributs de la fenetre
-    buffer: PixelBuffer,             //les attributs de la fenetre
+    ///la fenetre de l'app
+    window: Option<Window>,
+
+    ///Gestionnaire du rendu graphique, lié à la fenêtre.
+    // Le lifetime 'static garantit que la référence à la fenêtre reste valide aussi longtemps que Pixels existe.
+    pixels: Option<Pixels<'static>>,
+
+    ///taille en pixels reels sur l'ecran
+    size: PhysicalSize<u32>,
+
+    ///la hauteur du menu
+    menuH: u32,
+
+    ///la marge entre les bouttons du menu
+    margeXButtonMenu: u32,
+
+    ///le facteur pour logic -> physic
+    scaleFactor: f64,
+
+    ///les attributs de la fenetre
+    window_attributes: WindowAttributes,
+
+    ///le buffer pour dessiner
+    buffer: PixelBuffer,
 }
 
 impl App {
@@ -37,14 +60,18 @@ impl App {
             .with_decorations(decorations); //si on affiche la barre de titre
 
         let mut buffer: PixelBuffer = PixelBuffer::new(size.width, size.height);
-        buffer.FillAll(150, 0, 100, 255);
-        buffer.DrawCenterSquare(50, 255, 0, 0, 255);
+
+        buffer.FillAll([150, 0, 100, 255]);
+        buffer.DrawCenterFullSquare(50, [255, 0, 0, 255]);
 
         Self {
-            window: None,                                     //pas de fenetre creez
-            pixels: None, // L'interface de rendu n'est pas encore initialisée.
-            size: PhysicalSize::new(size.width, size.height), //la taille physique de la fenetre
-            window_attributes, //les attributs de la fenetre
+            window: None,
+            pixels: None,
+            size: PhysicalSize::new(size.width, size.height),
+            menuH: 50,
+            margeXButtonMenu: 10,
+            scaleFactor: 1.0,
+            window_attributes,
             buffer,
         }
     }
@@ -65,6 +92,23 @@ impl ApplicationHandler for App {
         let surface_texture: SurfaceTexture<&'static Window> =
             SurfaceTexture::new(self.size.width, self.size.height, static_window); //creation de la surface de rendu (ou affiche les pixels)
         let pixels = Pixels::new(self.size.width, self.size.height, surface_texture).unwrap(); //instancie la class pixel avec un frame(tableau des pixels) et la surface de texture
+
+        let monitor: Option<MonitorHandle> = window.current_monitor();
+        match monitor {
+            Some(monitor) => {
+                self.scaleFactor = monitor.scale_factor();
+                self.menuH = (((monitor.size().height as f64 * 0.01728395) * self.scaleFactor)
+                    as u32)
+                    .max(self.menuH);
+                self.margeXButtonMenu = (self.menuH / 5) as u32;
+                window.set_min_inner_size(Some(PhysicalSize::new(
+                    self.menuH * 4 + self.margeXButtonMenu * 3,
+                    self.menuH * 2,
+                )));
+            }
+
+            None => window.set_min_inner_size(Some(PhysicalSize::new(230, 100))),
+        }
 
         self.pixels = Some(pixels);
         self.window = Some(window); //stock le fenetre
@@ -91,22 +135,86 @@ impl ApplicationHandler for App {
                         {
                             eprintln!("Erreur lors du redimensionnement du buffer : {e}");
                         } else {
+                            self.buffer.SetSize(self.size.width, self.size.height);
                             self.size = new_size;
                             window.request_redraw();
                         }
                     }
                     WindowEvent::RedrawRequested => {
                         println!(
-                            "reaffichage width:{}, height{}",
+                            "reaffichagee width:{}, height:{}",
                             self.size.width, self.size.height
                         );
-
                         self.buffer.SetSize(self.size.width, self.size.height);
 
-                        let frame: &mut [u8] = pixels.frame_mut(); //buffer mutable des pixel
+                        /* #region menu */
+                        //dessine le fond du menu
+                        self.buffer.DrawFullRect(
+                            0,
+                            0,
+                            self.size.width,
+                            self.menuH,
+                            [255, 255, 255, 255],
+                        );
 
-                        frame.copy_from_slice(&self.buffer.pixels); //copy les pixels sur le rendu
-                        pixels.render().unwrap(); //l'envoie a l'ecran
+                        //dessine l'icon
+                        let bufferIcon = ImageManager::ReadIco();
+                        match bufferIcon {
+                            Ok(Some(bufferIcon)) => {
+                                self.buffer.DrawIntoArea(
+                                    &bufferIcon,
+                                    (self.menuH - (self.menuH - 20)) / 2,
+                                    (self.menuH - (self.menuH - 20)) / 2,
+                                    self.menuH - 20,
+                                    self.menuH - 20,
+                                );
+                            }
+                            _ => println!("no icon found"),
+                        }
+
+                        //dessine le tirer du boutton minimize
+                        self.buffer.DrawFullRect(
+                            self.size.width - (self.menuH * 3) - (self.margeXButtonMenu * 2)
+                                + (self.menuH - (self.menuH - 30)) / 2,
+                            (self.menuH - 4) / 2,
+                            self.menuH - 30,
+                            4,
+                            [0, 0, 0, 255],
+                        );
+
+                        //dessine le carer du boutton full screen
+                        self.buffer.DrawBorder(
+                            self.size.width - (self.menuH * 2) - (self.margeXButtonMenu)
+                                + (self.menuH - (self.menuH - 30)) / 2,
+                            (self.menuH - (self.menuH - 30)) / 2,
+                            self.menuH - 30,
+                            self.menuH - 30,
+                            2,
+                            2,
+                            2,
+                            2,
+                            [0, 0, 0, 255],
+                        );
+
+                        //dessine la croix du boutton fermer
+                        self.buffer.DrawCross(
+                            self.size.width - (self.menuH) + (self.menuH - (self.menuH - 30)) / 2,
+                            (self.menuH - (self.menuH - 30)) / 2,
+                            self.menuH - 30,
+                            self.menuH - 30,
+                            3,
+                            [0, 0, 0, 255],
+                        );
+                        /* #endregion */
+
+                        /*#region placement dans la fenetre*/
+                        //buffer mutable des pixel
+                        let frame: &mut [u8] = pixels.frame_mut();
+                        //copy les pixels sur le rendu
+                        frame.copy_from_slice(&self.buffer.pixels);
+                        //l'envoie a l'ecran
+                        pixels.render().unwrap();
+                        /*#endregion*/
                     }
                     _ => {
                         println!("Autre événement reçu : {:?}", event);
