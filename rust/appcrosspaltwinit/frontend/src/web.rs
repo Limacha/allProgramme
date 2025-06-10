@@ -2,7 +2,7 @@
 #![cfg(target_arch = "wasm32")]
 #![cfg(feature = "web")]
 
-use backend::Pixel_buffer::PixelBuffer;
+use backend::PixelManager::*;
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, ImageData};
 

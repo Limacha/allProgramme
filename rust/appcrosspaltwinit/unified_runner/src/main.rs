@@ -16,7 +16,7 @@ fn main() {
 
         let result = Command::new("basic-http-server")
             .args(&["-a", "127.0.0.1:8000"])
-            .current_dir("../../web_demo") // <- adapte ce chemin si nécessaire
+            .current_dir("C:\\Users\\Nico\\Documents\\github\\allProgramme\\rust\\appcrosspaltwinit\\web_demo") // <- adapte ce chemin si nécessaire
             .spawn();
 
         dbg!(&result);

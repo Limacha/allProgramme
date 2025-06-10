@@ -1,0 +1,14 @@
+[
+  {
+    "source": "yoyoyo.txt",
+    "destination": "test42/copyo.txt",
+    "injection": "// AJOUT AU DEBUT\n//trop cool mec",
+    "position": "start"
+  },
+  {
+    "source": "script.js",
+    "destination": "test/copie_script.js",
+    "injection": "// AJOUT À LA FIN\n//credit ta grand mere",
+    "position": "end"
+  }
+]

@@ -1,4 +1,4 @@
-use crate::Pixel_buffer::PixelBuffer;
+use crate::PixelManager::PixelBuffer;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 
@@ -19,8 +19,8 @@ impl ImageManager {
         file.read_exact(&mut header)?;
 
         // Nombre d'images contenues dans l'ICO
-        let count = u16::from_le_bytes([header[4], header[5]]);
-        println!("Nombre d'images: {}", count);
+        //let count = u16::from_le_bytes([header[4], header[5]]);
+        //println!("Nombre d'images: {}", count);
 
         // Lire la première entrée d'image (16 octets) dans le répertoire d'images
         let mut entry = [0u8; 16];
@@ -30,7 +30,7 @@ impl ImageManager {
         let size = u32::from_le_bytes([entry[8], entry[9], entry[10], entry[11]]);
         // Offset où commence réellement l'image
         let offset = u32::from_le_bytes([entry[12], entry[13], entry[14], entry[15]]);
-        println!("Image à l'offset {}, taille {}", offset, size);
+        //println!("Image à l'offset {}, taille {}", offset, size);
 
         // Aller à l'offset pour lire les données brutes de l'image
         file.seek(SeekFrom::Start(offset as u64))?;
@@ -39,11 +39,11 @@ impl ImageManager {
 
         // Vérifier si l'image est au format PNG (en-tête PNG)
         if image_data.starts_with(&[0x89, b'P', b'N', b'G']) {
-            println!("C'est une image PNG dans l'ICO.");
+            //println!("C'est une image PNG dans l'ICO.");
             // Le buffer image_data contient une image PNG complète
             // (À décoder avec une bibliothèque PNG si souhaité)
         } else {
-            println!("C'est une image BMP brute (DIB) dans l'ICO.");
+            //println!("C'est une image BMP brute (DIB) dans l'ICO.");
 
             // Extraire largeur depuis l’en-tête DIB
             let width =

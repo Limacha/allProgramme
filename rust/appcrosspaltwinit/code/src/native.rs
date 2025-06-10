@@ -8,7 +8,7 @@ use winit::{
     window::{Window, WindowAttributes},
 };
 
-use backend::{Image_manager::*, Pixel_buffer::*};
+use backend::{Image_manager::*, PixelManager::*};
 
 //task bar buton width 0,01579861
 //task bar buton heigth 0,01728395
@@ -38,6 +38,9 @@ pub struct App {
 
     ///le buffer pour dessiner
     buffer: PixelBuffer,
+
+    ///le buffer pour dessiner
+    elements: Vec<Box<dyn BufferElem>>,
 }
 
 impl App {
@@ -71,6 +74,7 @@ impl App {
             scaleFactor: 1.0,
             window_attributes,
             buffer,
+            elements: Vec::new(),
         }
     }
 }
@@ -91,6 +95,7 @@ impl ApplicationHandler for App {
             SurfaceTexture::new(self.size.width, self.size.height, static_window); //creation de la surface de rendu (ou affiche les pixels)
         let pixels = Pixels::new(self.size.width, self.size.height, surface_texture).unwrap(); //instancie la class pixel avec un frame(tableau des pixels) et la surface de texture
 
+        //definir les proportions de la fenetre selon le moniteur
         let monitor: Option<MonitorHandle> = window.current_monitor();
         match monitor {
             Some(monitor) => {
@@ -107,6 +112,8 @@ impl ApplicationHandler for App {
 
             None => window.set_min_inner_size(Some(PhysicalSize::new(230, 100))),
         }
+
+        self.elements.push(Box::new(Button::new(25, 25)));
 
         self.pixels = Some(pixels);
         self.window = Some(window); //stock le fenetre
@@ -145,6 +152,23 @@ impl ApplicationHandler for App {
                         );
                         self.buffer.SetSize(self.size.width, self.size.height);
 
+                        for element in &self.elements {
+                            if let Some(button) = element.as_any().downcast_ref::<Button>() {
+                                self.buffer.DrawFullRect(
+                                    self.size.width / 2,
+                                    self.size.height / 2,
+                                    button.width,
+                                    button.height,
+                                    [255, 255, 255, 255],
+                                );
+                            }
+                            /*else if let Some(button) = element.as_any().downcast_ref::<Button>() {
+                            }*/
+                            else {
+                                print!("type non gerer");
+                            }
+                        }
+
                         /* #region menu */
                         //dessine le fond du menu
                         self.buffer.DrawFullRect(
@@ -155,6 +179,13 @@ impl ApplicationHandler for App {
                             [255, 255, 255, 255],
                         );
 
+                        self.buffer.DrawFullRect(
+                            0,
+                            0,
+                            self.menuH,
+                            self.menuH,
+                            [255, 255, 255, 255],
+                        );
                         //dessine l'icon
                         let bufferIcon = ImageManager::ReadIco(
                             "C:\\Users\\Nico\\Documents\\github\\allProgramme\\rust\\appcrosspaltwinit\\frontend\\assets\\img\\mcColors.ico",
@@ -172,6 +203,13 @@ impl ApplicationHandler for App {
                             _ => println!("no icon found"),
                         }
 
+                        self.buffer.DrawFullRect(
+                            self.size.width - (self.menuH * 3) - (self.margeXButtonMenu * 2),
+                            0,
+                            self.menuH,
+                            self.menuH,
+                            [255, 255, 255, 255],
+                        );
                         //dessine le tirer du boutton minimize
                         self.buffer.DrawFullRect(
                             self.size.width - (self.menuH * 3) - (self.margeXButtonMenu * 2)
@@ -182,6 +220,13 @@ impl ApplicationHandler for App {
                             [0, 0, 0, 255],
                         );
 
+                        self.buffer.DrawFullRect(
+                            self.size.width - (self.menuH * 2) - (self.margeXButtonMenu),
+                            0,
+                            self.menuH,
+                            self.menuH,
+                            [255, 255, 255, 255],
+                        );
                         //dessine le carer du boutton full screen
                         self.buffer.DrawBorder(
                             self.size.width - (self.menuH * 2) - (self.margeXButtonMenu)
@@ -196,6 +241,13 @@ impl ApplicationHandler for App {
                             [0, 0, 0, 255],
                         );
 
+                        self.buffer.DrawFullRect(
+                            self.size.width - (self.menuH),
+                            0,
+                            self.menuH,
+                            self.menuH,
+                            [255, 255, 255, 255],
+                        );
                         //dessine la croix du boutton fermer
                         self.buffer.DrawCross(
                             self.size.width - (self.menuH) + (self.menuH - (self.menuH - 30)) / 2,

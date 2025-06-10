@@ -2,4 +2,12 @@
 #![allow(unused_parens)]
 
 pub mod Image_manager;
-pub mod Pixel_buffer;
+// On déclare directement les modules en spécifiant le chemin vers leurs fichiers
+
+#[path = "pixelManager\\mod.rs"]
+pub mod PixelManager;
+/*
+#[path = "pixelBuffer\\elements.rs"]
+mod element_mod;
+
+pub use pixelbuffer_mod::PixelBuffer;*/
