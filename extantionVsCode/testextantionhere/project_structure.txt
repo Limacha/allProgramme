@@ -1,0 +1,75 @@
+=== Structure du projet ===
+
+├── copie_script.js
+├── projstructgen.config.json
+├── script.js
+├── jack
+│   ├── bernard
+├── test
+│   ├── copie_script.js
+├── test42
+
+
+///////////////////////////
+// copie_script.js
+///////////////////////////
+
+console.log("djieodjiz");
+// AJOUT À LA FIN
+//credit ta grand mere
+
+///////////////////////////
+// projstructgen.config.json
+///////////////////////////
+
+{
+  "excludeFolders": [
+    "iesjfis"
+  ],
+  "excludeExtensions": [
+    ".txt"
+  ],
+  "excludeFiles": [
+    "copyonsaveandedit.json"
+  ],
+  "excludeNamePatterns": [
+    "*fu*"
+  ]
+}
+
+///////////////////////////
+// script.js
+///////////////////////////
+
+console.log("djieodjiz");
+
+///////////////////////////
+// jack
+///////////////////////////
+
+
+
+///////////////////////////
+// jack\bernard
+///////////////////////////
+
+
+
+///////////////////////////
+// test
+///////////////////////////
+
+
+
+///////////////////////////
+// test\copie_script.js
+///////////////////////////
+
+console.log("djieodjiz");
+// AJOUT À LA FIN
+
+///////////////////////////
+// test42
+///////////////////////////
+
+

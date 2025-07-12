@@ -1,16 +1,19 @@
 #![cfg(not(target_arch = "wasm32"))]
 #![cfg(feature = "native")]
+/* #region import */
 use pixels::{Pixels, SurfaceTexture};
 use winit::{
     application::ApplicationHandler,
-    dpi::{LogicalSize, PhysicalSize},
+    dpi::{LogicalSize, PhysicalPosition, PhysicalSize},
     event::WindowEvent,
     event_loop::{ActiveEventLoop, EventLoop},
     monitor::MonitorHandle,
     window::{Window, WindowAttributes},
 };
 
-use backend::{Image_manager::*, PixelManager::*};
+use backend::{Fonction, Image_manager::*, PixelManager::*};
+
+/* #endregion */
 
 //task bar buton width 0,01579861
 //task bar buton heigth 0,01728395
@@ -34,6 +37,9 @@ pub struct App {
 
     ///le facteur pour logic -> physic
     scaleFactor: f64,
+
+    ///position de la souris
+    mousePosition: PhysicalPosition<u32>,
 
     ///les attributs de la fenetre
     window_attributes: WindowAttributes,
@@ -74,6 +80,7 @@ impl App {
             menuH: 50,
             margeXButtonMenu: 10,
             scaleFactor: 1.0,
+            mousePosition: PhysicalPosition { x: (0), y: (0) },
             window_attributes,
             buffer,
             elements: Vec::new(),
@@ -114,8 +121,43 @@ impl ApplicationHandler for App {
 
             None => window.set_min_inner_size(Some(PhysicalSize::new(230, 100))),
         }
+        let funcs: Box<[DrawnFunc]> = vec![
+            |buffer: &mut PixelBuffer, element: &dyn BufferElem| {
+                if let Some(button) = element.as_any().downcast_ref::<Button>() {
+                    buffer.DrawFullRect(
+                        button.startX,
+                        button.startY,
+                        button.width,
+                        button.height,
+                        button.color,
+                    );
+                    println!("rect");
+                }
+            },
+            |buffer: &mut PixelBuffer, element: &dyn BufferElem| {
+                if let Some(button) = element.as_any().downcast_ref::<Button>() {
+                    buffer.DrawCross(
+                        (button.startX + button.border[0]).min(button.startX + button.width),
+                        (button.startY + button.border[1]).min(button.startY + button.height),
+                        (button.width - (button.border[0] + button.border[2])).max(0),
+                        (button.height - (button.border[1] + button.border[3])).max(0),
+                        4,
+                        ,
+                    );
+                    println!("cross");
+                }
+            },
+        ]
+        .into_boxed_slice();
 
-        self.elements.push(Box::new(Button::new(25, 25)));
+        self.elements.push(Box::new(Button::new(
+            150,
+            150,
+            75,
+            75,
+            [255, 255, 255, 255],
+            funcs,
+        )));
 
         self.pixels = Some(pixels);
         self.window = Some(window); //stock le fenetre
@@ -147,6 +189,40 @@ impl ApplicationHandler for App {
                             window.request_redraw();
                         }
                     }
+                    WindowEvent::CursorMoved {
+                        device_id,
+                        position,
+                    } => {
+                        println!(
+                            "MouseInput:  device_id: {:?}, position: {:?}",
+                            device_id, position
+                        );
+                        self.mousePosition = position.cast();
+                    }
+                    WindowEvent::MouseInput {
+                        device_id,
+                        state,
+                        button,
+                    } => {
+                        println!(
+                            "MouseInput:  device_id: {:?}, state: {:?}, button: {:?}, mousePosition: {:?} ",
+                            device_id, state, button, self.mousePosition
+                        );
+                        if state.is_pressed() {
+                            for element in &self.elements {
+                                if let Some(but) = element.as_any().downcast_ref::<Button>() {
+                                    if but.click(self.mousePosition.x, self.mousePosition.y) {
+                                        println!("button press");
+                                    }
+                                }
+                                /*else if let Some(button) = element.as_any().downcast_ref::<Button>() {
+                                }*/
+                                else {
+                                    print!("type non gerer");
+                                }
+                            }
+                        }
+                    }
                     WindowEvent::RedrawRequested => {
                         println!(
                             "reaffichagee width:{}, height:{}",
@@ -156,13 +232,7 @@ impl ApplicationHandler for App {
 
                         for element in &self.elements {
                             if let Some(button) = element.as_any().downcast_ref::<Button>() {
-                                self.buffer.DrawFullRect(
-                                    self.size.width / 2,
-                                    self.size.height / 2,
-                                    button.width,
-                                    button.height,
-                                    [255, 255, 255, 255],
-                                );
+                                button.add(&mut self.buffer);
                             }
                             /*else if let Some(button) = element.as_any().downcast_ref::<Button>() {
                             }*/

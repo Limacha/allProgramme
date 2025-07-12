@@ -1,0 +1,14 @@
+{
+  "excludeFolders": [
+    "iesjfis"
+  ],
+  "excludeExtensions": [
+    ".txt"
+  ],
+  "excludeFiles": [
+    "copyonsaveandedit.json"
+  ],
+  "excludeNamePatterns": [
+    "*fu*"
+  ]
+}

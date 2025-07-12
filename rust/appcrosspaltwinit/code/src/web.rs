@@ -1,7 +1,4 @@
-#![allow(non_snake_case)] /* 
-#![cfg(target_arch = "wasm32")]
-#![cfg(feature = "web")]*/
-
+#![allow(non_snake_case)]
 use backend::PixelManager::*;
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, ImageData};

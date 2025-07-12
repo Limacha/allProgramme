@@ -1,14 +1,26 @@
 [
   {
-    "source": "yoyoyo.txt",
-    "destination": "test42/copyo.txt",
-    "injection": "// AJOUT AU DEBUT\n//trop cool mec",
+    "source": "test/test.txt",
+    "destination": "copies/test_copy.txt",
+    "injection": "// Ajout exemple",
+    "position": "end"
+  },
+  {
+    "source": "test/test2.txt",
+    "destination": "copies/test2_copy.txt",
+    "injection": "// Ajout exemple",
+    "position": "start"
+  },
+  {
+    "source": "test42/yoyoyo.txt",
+    "destination": "jack/copyo.txt",
+    "injection": "// AJOUT AU DEBUT",
     "position": "start"
   },
   {
     "source": "script.js",
     "destination": "test/copie_script.js",
-    "injection": "// AJOUT À LA FIN\n//credit ta grand mere",
+    "injection": "// AJOUT À LA FIN",
     "position": "end"
   }
 ]
