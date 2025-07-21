@@ -1,0 +1,17 @@
+{
+    "structGenerator": {
+        "excludeFolders": [
+            "iesjfis"
+        ],
+        "excludeExtensions": [
+            ".txt"
+        ],
+        "excludeFiles": [
+            "copyonsaveandedit.json"
+        ],
+        "excludeNamePatterns": [
+            "*fu*",
+            "*fez**fe*z*"
+        ]
+    }
+}

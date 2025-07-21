@@ -1,0 +1,16 @@
+{
+  "excludeFolders": [
+    "target",
+    "pkg"
+  ],
+  "excludeExtensions": [],
+  "excludeFiles": [
+    "launchvs.bat",
+    "copyonsaveandedit.json",
+    "projstructgen.config.json"
+  ],
+  "excludeNamePatterns": [
+    "*gpt*",
+    "project_*"
+  ]
+}

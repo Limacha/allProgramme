@@ -1,0 +1,36 @@
+=== Structure du projet ===
+
+├── Cargo.lock
+├── Cargo.toml
+├── backend
+│   ├── Cargo.toml
+│   ├── src
+│   │   ├── Image_manager.rs
+│   │   ├── lib.rs
+│   │   ├── pixelManager
+│   │   │   ├── elements.rs
+│   │   │   ├── fonction.rs
+│   │   │   ├── mod.rs
+│   │   │   ├── PixelBuffer.rs
+├── code
+│   ├── Cargo.toml
+│   ├── src
+│   │   ├── lib.rs
+│   │   ├── native.rs
+│   │   ├── web.rs
+├── frontend
+│   ├── Cargo.toml
+│   ├── assets
+│   │   ├── img
+│   │   │   ├── mcColors.ico
+│   ├── src
+│   │   ├── lib.rs
+│   │   ├── native.rs
+│   │   ├── web.rs
+├── unified_runner
+│   ├── Cargo.toml
+│   ├── src
+│   │   ├── main.rs
+├── web_demo
+│   ├── index.html
+
