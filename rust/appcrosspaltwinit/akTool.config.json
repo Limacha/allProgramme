@@ -1,0 +1,32 @@
+{
+  "StructureConfig": {
+    "excludeFolders": [
+      "target",
+      "pkg"
+    ],
+    "excludeExtensions": [],
+    "excludeFiles": [
+      "launchvs.bat",
+      "copyonsaveandedit.json",
+      "projstructgen.config.json"
+    ],
+    "excludeNamePatterns": [
+      "*gpt*",
+      "project_*"
+    ]
+  },
+  "CopyRule": [
+    {
+      "source": "code/src/native.rs",
+      "destination": "frontend/src/native.rs",
+      "injection": "#![cfg(not(target_arch = \"wasm32\"))]\n#![cfg(feature = \"native\")]",
+      "position": "start"
+    },
+    {
+      "source": "code/src/web.rs",
+      "destination": "frontend/src/web.rs",
+      "injection": "#![cfg(target_arch = \"wasm32\")]\n#![cfg(feature = \"web\")]",
+      "position": "start"
+    }
+  ]
+}

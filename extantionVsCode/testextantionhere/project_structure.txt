@@ -1,99 +1,22 @@
 === Structure du projet ===
 
-├── akTool.config.json
-├── copie_script.js
-├── projstructgen.config.json
-├── script.js
-├── jack
-│   ├── bernard
-├── test
-│   ├── copie_script.js
-├── test42
-
-
-///////////////////////////
-// akTool.config.json
-///////////////////////////
-
-{
-    "structGenerator": {
-        "excludeFolders": [
-            "iesjfis"
-        ],
-        "excludeExtensions": [
-            ".txt"
-        ],
-        "excludeFiles": [
-            "copyonsaveandedit.json"
-        ],
-        "excludeNamePatterns": [
-            "*fu*",
-            "*fez**fe*z*"
-        ]
-    }
-}
-
-///////////////////////////
-// copie_script.js
-///////////////////////////
-
-console.log("djieodjiz");
-// AJOUT À LA FIN
-//credit ta grand mere
-
-///////////////////////////
-// projstructgen.config.json
-///////////////////////////
-
-{
-  "excludeFolders": [
-    "iesjfis"
-  ],
-  "excludeExtensions": [
-    ".txt"
-  ],
-  "excludeFiles": [
-    "copyonsaveandedit.json"
-  ],
-  "excludeNamePatterns": [
-    "*fu*",
-    "*fez**fe*z*"
-  ]
-}
-
-///////////////////////////
-// script.js
-///////////////////////////
-
-console.log("djieodjiz");
-
-///////////////////////////
-// jack
-///////////////////////////
-
-
-
-///////////////////////////
-// jack\bernard
-///////////////////////////
-
-
-
-///////////////////////////
-// test
-///////////////////////////
-
-
-
-///////////////////////////
-// test\copie_script.js
-///////////////////////////
-
-console.log("djieodjiz");
-// AJOUT À LA FIN
-
-///////////////////////////
-// test42
-///////////////////////////
-
+├D─ copies
+├D─ jack
+│   ├D─ bernard
+│   │   ├F─ fuck.html
+│   ├D─ iesjfis
+│   │   ├F─ fsjifodjs.rs
+│   │   ├F─ rqeqfref.md
+│   │   ├D─ fdsfds
+│   │   │   ├F─ fdsfsdf51.fjg
+│   ├D─ zdgr
+│   │   ├F─ grdgdr
+├D─ nice
+├D─ origin
+│   ├F─ jdnqdjzq
+│   ├D─ lklk,kl
+├D─ test
+│   ├F─ copie_script.js
+├D─ test42
+├D─ to
 

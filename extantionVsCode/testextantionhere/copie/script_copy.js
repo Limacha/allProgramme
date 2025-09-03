@@ -1,3 +1,4 @@
+//start
 console.log("djieodjiz");
 console.log("djieodjiz");
 console.log("djieodjiz");
@@ -11,6 +12,7 @@ console.log("djieodjiz");
 console.log("djieodjiz");
 console.log("djieodjiz");
 console.log("djieodjiz");
+//ligne 15
 console.log("djieodjiz");
 console.log("djieodjiz");
 console.log("djieodjiz");
@@ -55,6 +57,8 @@ console.log("djieodjiz");
 console.log("djieodjiz");
 console.log("djieodjiz");
 
+//ligne 5 depuis la fin
 console.log("djieodjiz");
 console.log("djieodjiz");
 console.log("djieodjiz");
+//end

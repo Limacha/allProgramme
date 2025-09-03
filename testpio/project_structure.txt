@@ -1,0 +1,56 @@
+=== Structure du projet ===
+
+├F─ .gitignore
+├F─ platformio.ini
+├F─ shemaInputToFunction.excalidraw.png
+├D─ .pio
+│   ├D─ build
+│   │   ├F─ project.checksum
+│   │   ├D─ esp32
+│   │   ├D─ mega2560
+│   ├D─ libdeps
+├D─ .vscode
+│   ├F─ c_cpp_properties.json
+│   ├F─ extensions.json
+│   ├F─ launch.json
+│   ├F─ settings.json
+├D─ include
+│   ├F─ README
+├D─ lib
+│   ├F─ README
+│   ├D─ DynamicMap
+│   │   ├F─ library.properties
+│   │   ├F─ README.md
+│   │   ├D─ example
+│   │   │   ├F─ basicExample.cpp
+│   │   ├D─ src
+│   │   │   ├F─ DynamicMap.h
+│   │   │   ├F─ DynamicMap.tpp
+│   ├D─ Function
+│   │   ├D─ src
+│   │   │   ├F─ Function.h
+│   │   │   ├F─ Function.tpp
+├D─ src
+│   ├D─ esp32
+│   │   ├F─ main.cpp
+│   ├D─ mega2560
+│   │   ├F─ main.cpp
+│   │   ├D─ CommandManager
+│   │   │   ├F─ Command.cpp
+│   │   │   ├F─ Command.h
+│   │   │   ├F─ CommandManager.cpp
+│   │   │   ├F─ CommandManager.h
+│   │   ├D─ MouvementControl
+│   │   │   ├F─ MouvementControl.cpp
+│   │   │   ├F─ MouvementControl.h
+│   │   ├D─ Prefix
+│   │   │   ├F─ PrefixController.cpp
+│   │   │   ├F─ PrefixController.h
+│   │   │   ├F─ PrefixManager.cpp
+│   │   │   ├F─ PrefixManager.h
+│   │   ├D─ Serial
+│   │   │   ├F─ SerialController.h
+│   │   │   ├F─ SerialController.tpp
+├D─ test
+│   ├F─ README
+

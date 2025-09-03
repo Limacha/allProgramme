@@ -1,17 +1,41 @@
 {
-    "structGenerator": {
+    "StructureConfig": {
         "excludeFolders": [
-            "iesjfis"
+            "test42\test",
+            "test42\\test",
+            "test42/test"
         ],
         "excludeExtensions": [
             ".txt"
         ],
         "excludeFiles": [
-            "copyonsaveandedit.json"
+            "project_structure.txt",
+            "akTool.config.json",
+            "origin/script.js"
         ],
-        "excludeNamePatterns": [
-            "*fu*",
-            "*fez**fe*z*"
-        ]
+        "excludeName": [
+            "*amp*",
+            "exam*",
+            "*m**e*",
+            "example"
+        ],
+        "excludeCode": {
+            "folders": [
+                "example"
+            ],
+            "extensions": [
+                ".js"
+            ],
+            "files": [
+                "example.txt",
+                "package-lock.json"
+            ],
+            "name": [
+                "*amp*",
+                "exam*",
+                "*m**e*",
+                "example"
+            ]
+        }
     }
 }
