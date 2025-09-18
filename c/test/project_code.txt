@@ -1,0 +1,2089 @@
+///////////////////////////
+// dateTime.c
+///////////////////////////
+#include "dateTime.h"
+#include "platform/platform.h"
+
+void getDate(unsigned short *year, unsigned short *month, unsigned short *day)
+{
+    platformGetDate(year, month, day);
+}
+void getTime(unsigned short *hour, unsigned short *minute, unsigned short *second)
+{
+    platformGetTime(hour, minute, second);
+}
+
+///////////////////////////
+// dateTime.h
+///////////////////////////
+#ifndef dateTime_H
+#define dateTime_H
+
+void getDate(unsigned short *year, unsigned short *month, unsigned short *day);
+void getTime(unsigned short *hour, unsigned short *minute, unsigned short *second);
+
+#endif
+
+///////////////////////////
+// error.c
+///////////////////////////
+
+
+///////////////////////////
+// error.h
+///////////////////////////
+#ifndef error_H
+#define error_H
+
+typedef struct
+{
+} Error;
+
+#endif
+
+///////////////////////////
+// files.c
+///////////////////////////
+#include "files.h"
+
+unsigned short getCurrentPath(char *path)
+{
+    return platformGetCurrentPath(path);
+}
+
+unsigned char writeFile(const char *path, const char *data, unsigned long size)
+{
+    return platformWriteFile(path, data, size);
+}
+
+unsigned char addToFile(const char *path, const char *data)
+{
+    return platformAppendToFile(path, data);
+}
+
+void *readFileBinary(const char *path, unsigned long *outSize)
+{
+    return platformReadFileBinary(path, outSize);
+}
+
+void freeFileBinary(void *buffer)
+{
+    platformFreeFileBinary(buffer);
+}
+
+unsigned char fileExists(const char *path)
+{
+    return platformFileExists(path);
+}
+
+unsigned char dirExists(const char *path)
+{
+    return platformDirExists(path);
+}
+
+unsigned char pathExists(const char *path)
+{
+    return platformPathExists(path);
+}
+
+unsigned char createDir(const char *path)
+{
+    return platformCreateDir(path);
+}
+
+DirList getDirContent(const char *path)
+{
+    return platformListDir(path);
+}
+
+void createPathIfNotExists(char *path, unsigned char lastIsFolder)
+{
+    normalizePathToSlash(path);
+    unsigned short n = 0;
+    while (path[n] != '\0')
+    {
+        if (path[n] == '/')
+        {
+            char saved = path[n];
+            path[n] = '\0';
+            if (!dirExists(path))
+            {
+                createDir(path);
+            }
+            path[n] = saved;
+        }
+        n++;
+    }
+    if (lastIsFolder)
+    {
+        if (!dirExists(path))
+            createDir(path);
+    }
+    else
+    {
+        if (!fileExists(path))
+            writeFile(path, "", 0);
+    }
+}
+
+/**
+ * @brief normalize le chemin avec des /
+ *
+ * @param path chemin avec \0 a la fin
+ */
+void normalizePathToSlash(char *path)
+{
+    if (!path)
+        return;
+
+    unsigned int i = 0;
+    while (path[i] != '\0')
+    {
+        if (path[i] == '\\')
+            path[i] = '/';
+        i++;
+    }
+}
+
+char *dirListToSingleBuffer(DirList *list, char *separator, unsigned char startEnd)
+{
+    if (!list || list->count == 0)
+        return 0;
+
+    unsigned short separatorLenght = strLen(separator);
+
+    // Calculer la taille totale
+    unsigned int totalLen = 0;
+    for (unsigned int i = 0; i < list->count; i++)
+    {
+        char *path = list->items[i];
+        unsigned short pathLenght = strLen(path);
+        totalLen += pathLenght;
+    }
+    if (startEnd & 0x01)
+        totalLen += separatorLenght;
+    if (startEnd & 0x02)
+        totalLen += separatorLenght;
+
+    totalLen += (list->count - 1) * separatorLenght; // ajoute la taille du separateur a chaque fois
+    totalLen += 1;                                   // +1 pour le '\0' final
+
+    char *buffer = (char *)memoryMalloc(totalLen);
+    if (!buffer)
+        return 0;
+
+    unsigned int k = 0;
+    // ajoute le separateur au debut
+    if (startEnd & 0x01)
+    {
+        for (unsigned short i = 0; i < separatorLenght; i++)
+        {
+            buffer[i] = separator[i];
+        }
+        k = separatorLenght;
+    }
+    // Copier les chaînes dans le buffer
+    for (unsigned int i = 0; i < list->count; i++)
+    {
+        char *s = list->items[i];
+        unsigned int j = 0;
+        while (s[j])
+        {
+            buffer[k++] = s[j++];
+        }
+
+        if (i != list->count - 1) // ajouter le separator sauf après le dernier
+            for (unsigned short i = 0; i < separatorLenght; i++)
+                buffer[k++] = separator[i];
+    }
+    // ajoute le separateur a la fin
+    if (startEnd & 0x02)
+        for (unsigned short i = 0; i < separatorLenght; i++, k++)
+            buffer[k] = separator[i];
+
+    buffer[k] = '\0'; // terminer la chaîne
+    return buffer;
+}
+
+
+///////////////////////////
+// files.h
+///////////////////////////
+#ifndef files_H
+#define files_H
+#include "platform/platform.h"
+#include "memory.h"
+#include "fonction.h"
+
+/**
+ * @brief obtient le dossier de l'executable
+ *
+ * @param path le chemin ou on est
+ *
+ * @return la taille du chemin
+ */
+unsigned short getCurrentPath(char *path);
+
+/**
+ * @brief cree/reecrit un fichier avec le contenu fournit
+ *
+ * @param path le chemin du fichier
+ * @param data le contenu du fichier
+ * @param size la taille du contenu
+ *
+ * @return si le fichier a put etre ecrit
+ */
+unsigned char writeFile(const char *path, const char *data, unsigned long size);
+
+/**
+ * @brief ajoute du contenu a un fichier
+ *
+ * @param path le chemin du fichier
+ * @param data le contenu a ajouter
+ *
+ * @return si tout s'est bien passer
+ */
+unsigned char addToFile(const char *path, const char *data);
+
+/**
+ * @brief lin un fichier et renvouie un buffer dynamique
+ *
+ * @param path le chemin du fichier
+ * @param outSize taille du buffer sorti
+ *
+ * @return toute les donnes du fichier (a liberer)
+ */
+void *readFileBinary(const char *path, unsigned long *outSize);
+
+/**
+ * @brief libere le buffer contenant le contenu d'un fichier
+ *
+ * @param buffer le contenu a liberer
+ */
+void freeFileBinary(void *buffer);
+
+/**
+ * @brief renvoie si le chemin existe et que s'est un fichier
+ *
+ * @param path le chemin
+ *
+ * @return si le fichier existe
+ */
+unsigned char fileExists(const char *path);
+
+/**
+ * @brief renvoie si le chemin existe et que s'est un dossier
+ *
+ * @param path le chemin
+ *
+ * @return si le dossier existe
+ */
+unsigned char dirExists(const char *path);
+
+/**
+ * @brief renvoie si le chemin existe
+ *
+ * @param path le chemin
+ *
+ * @return si le chemin existe
+ */
+unsigned char pathExists(const char *path);
+
+/**
+ * @brief cree un dossier
+ *
+ * @param path le chemin
+ *
+ * @return si il a ete cree
+ */
+unsigned char createDir(const char *path);
+
+/**
+ * @brief liste le contenu du dossier
+ *
+ * @param path le chemin a lister
+ *
+ * @return la liste
+ */
+DirList getDirContent(const char *path);
+
+/**
+ * @brief cree le chemin passer si il n'existe pas
+ *
+ * @param path le chemin
+ * @param lastIsFolder si le dernier element est un dossier
+ */
+void createPathIfNotExists(char *path, unsigned char lastIsFolder);
+
+/**
+ * @brief normalize le chemin au format /
+ *
+ * @param path le chemin a normalizer
+ */
+void normalizePathToSlash(char *path);
+
+/**
+ * @brief transforme DirList en un seul tableau
+ *
+ * @param list la list a transformer
+ * @param separator contenu entre chaque chemin
+ * @param startEnd ajout du separateur au debut ou a la fin bit0 = start, bit1 = end
+ *
+ * @return un tableau avec tout les chemins (a liberer)
+ */
+char *dirListToSingleBuffer(DirList *list, char *separator, unsigned char startEnd);
+#endif
+
+///////////////////////////
+// fonction.c
+///////////////////////////
+
+void u16To2Digits(char *dest, unsigned short value)
+{
+    dest[0] = (value / 10) + '0';
+    dest[1] = (value % 10) + '0';
+}
+
+void u16To4Digits(char *dest, unsigned short value)
+{
+    dest[0] = (value / 1000) % 10 + '0';
+    dest[1] = (value / 100) % 10 + '0';
+    dest[2] = (value / 10) % 10 + '0';
+    dest[3] = (value % 10) + '0';
+}
+
+unsigned int strLen(const char *s)
+{
+    unsigned int n = 0;
+    // si s existe et valeurs != \0
+    while (s && s[n])
+        n++;
+    return n;
+}
+
+
+///////////////////////////
+// fonction.h
+///////////////////////////
+#ifndef fonction_H
+#define fonction_H
+
+void u16To2Digits(char *dest, unsigned short value);
+void u16To4Digits(char *dest, unsigned short value);
+
+/**
+ * @brief permet de calculer la taille d'une chaine
+ *
+ * @param s la chaine a calculer
+ *
+ * @return le nombre de charactere
+ */
+unsigned int strLen(const char *s);
+
+#endif
+
+///////////////////////////
+// input.c
+///////////////////////////
+#include "input.h"
+#include "files.h"
+#include "platform/platform.h"
+
+static int space_pressed = 0;
+
+// // Abstraction : chaque OS implémente ces fonctions
+// extern void platformInitInput(void);
+// extern void platformProcessInput(void);
+// extern int platformIsSpacePressed(void);
+// extern int platformIsRunning(void);
+
+void initInput(void)
+{
+    platformInitInput();
+}
+
+void processInput(void)
+{
+    platformProcessInput();
+}
+
+int isSpacePressed(void)
+{
+    int spacePress = platformIsSpacePressed();
+    if (spacePress)
+    {
+        addToFile("jacko.txt", "\nspace: ");
+    }
+    return spacePress;
+}
+
+int isRunning(void)
+{
+    return platformIsRunning();
+}
+
+
+///////////////////////////
+// input.h
+///////////////////////////
+#ifndef INPUT_H
+#define INPUT_H
+
+void initInput(void);
+void processInput(void);
+int isSpacePressed(void);
+int isRunning(void);
+
+#endif
+
+
+///////////////////////////
+// logic.c
+///////////////////////////
+#include "logic.h"
+#include "input.h"
+
+// --- Paramètres ---
+#define MAX_WIDTH 1920
+#define MAX_HEIGHT 1080
+
+static unsigned int pixels[MAX_WIDTH * MAX_HEIGHT];
+static int width, height;
+
+void initLogic(int w, int h)
+{
+    if (w > MAX_WIDTH)
+        w = MAX_WIDTH;
+    if (h > MAX_HEIGHT)
+        h = MAX_HEIGHT;
+    width = w;
+    height = h;
+
+    // Aucun malloc nécessaire, buffer statique déjà alloué
+}
+
+void updateLogic(void)
+{
+    static int frame = 0;
+    if (!isSpacePressed()) // mouvement uniquement si espace non pressé
+        frame++;
+
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            pixels[y * width + x] = ((x + frame) << 16) | ((y + frame) << 8);
+        }
+    }
+}
+
+void shutdownLogic(void)
+{
+    // rien à faire, buffer statique
+}
+
+unsigned int *getPixels(void)
+{
+    return pixels;
+}
+
+
+///////////////////////////
+// logic.h
+///////////////////////////
+#ifndef LOGIC_H
+#define LOGIC_H
+
+void initLogic(int w, int h);
+void updateLogic(void);
+void shutdownLogic(void);
+unsigned int *getPixels(void);
+
+#endif
+
+
+///////////////////////////
+// main.c
+///////////////////////////
+#include "logic.h"
+#include "input.h"
+#include "render.h"
+#include "files.h"
+#include "log/log.h"
+
+int main(void)
+{
+    initLog();
+    initLogic(800, 600);  // créer une surface 800x600 pixels
+    initRender(800, 600); // init rendu selon OS
+    initInput();          // init input selon OS
+
+    DirList racineContent = getDirContent("C:/Users/Nico/Documents/github/allProgramme/c/test");
+    char *buffer = dirListToSingleBuffer(&racineContent, "\n-> ", 0x01);
+    if (buffer)
+    {
+        addToLog(buffer, 0x02); // utiliser le buffer
+        memoryFree(buffer);
+        // libérer le buffer après utilisation
+    }
+    addToLog("\n", 0x00);
+
+    while (isRunning())
+    {
+        processInput();           // récupérer les entrées
+        updateLogic();            // mettre à jour pixels
+        renderFrame(getPixels()); // afficher pixels
+    }
+
+    shutdownRender();
+    shutdownLogic();
+    return 0;
+}
+
+
+///////////////////////////
+// memory.c
+///////////////////////////
+#include "memory.h"
+#include "platform/platform.h"
+
+void *memoryMalloc(unsigned int size)
+{
+    return platformMemoryAlloc(size);
+}
+
+void memoryFree(void *ptr)
+{
+    platfromMemoryFree(ptr);
+}
+
+///////////////////////////
+// memory.h
+///////////////////////////
+#ifndef memory_H
+#define memory_H
+
+void *memoryMalloc(unsigned int size);
+void memoryFree(void *ptr);
+
+#endif
+
+///////////////////////////
+// render.c
+///////////////////////////
+#include "render.h"
+#include "platform/platform.h"
+
+void initRender(int w, int h)
+{
+    platformInitRender(w, h);
+}
+
+void renderFrame(unsigned int *pixels)
+{
+    platformRenderFrame(pixels);
+}
+
+void shutdownRender(void)
+{
+    platformShutdownRender();
+}
+
+
+///////////////////////////
+// render.h
+///////////////////////////
+#ifndef RENDER_H
+#define RENDER_H
+
+void initRender(int w, int h);
+void renderFrame(unsigned int *pixels);
+void shutdownRender(void);
+
+#endif
+
+
+///////////////////////////
+// string.c
+///////////////////////////
+#include "string.h"
+#include "memory.h"
+#include "fonction.h"
+
+String stringCreate(const char *initial)
+{
+    // set les valeurs en fonctions de l'initial
+    String s;
+    s.len = strLen(initial);
+    s.cap = s.len + 1; // +1 pour le '\0'
+    s.data = (char *)memoryMalloc(s.cap);
+    if (s.data)
+    {
+        // copie le contenu
+        for (unsigned int i = 0; i < s.len; i++)
+            s.data[i] = initial[i];
+
+        // fini la chaine
+        s.data[s.len] = '\0';
+    }
+    return s;
+}
+
+void stringFree(String *s)
+{
+    // libere l'espace
+    if (s->data)
+        memoryFree(s->data);
+    // reset les valeurs
+    s->data = 0;
+    s->len = 0;
+    s->cap = 0;
+}
+
+void stringAppend(String *s, const char *text)
+{
+    unsigned int addLen = strLen(text); // obtien la taille sans \0
+    if (addLen == 0)
+        return;
+
+    unsigned int newLen = s->len + addLen; // nouvelle taille sans \0
+
+    // Si pas assez de place, réallouer
+    if (newLen + 1 > s->cap)
+    {
+        // set des nouvelle valeur
+        unsigned int newCap = newLen + 1;
+        char *newData = (char *)memoryMalloc(newCap);
+        if (!newData)
+            return;
+
+        // Copier l'ancien contenu
+        for (unsigned int i = 0; i < s->len; i++)
+            newData[i] = s->data[i];
+
+        // Libérer ancien buffer
+        memoryFree(s->data);
+        s->data = newData;
+        s->cap = newCap;
+    }
+
+    // Copier le nouveau texte
+    for (unsigned int i = 0; i < addLen; i++)
+        s->data[s->len + i] = text[i];
+
+    s->len = newLen;
+    s->data[s->len] = '\0';
+}
+
+String stringAdd(const String *sStart, const String *sAddon)
+{
+    String result;
+    // calcul des nouvelles valeurs
+    result.len = sStart->len + sAddon->len;
+    result.cap = result.len + 1;
+    result.data = (char *)memoryMalloc(result.cap);
+
+    if (result.data)
+    {
+        // ajoute le string start au result
+        unsigned int i = 0;
+        for (; i < sStart->len; i++)
+        {
+            result.data[i] = sStart->data[i];
+        }
+
+        // ajoute l'addon au result
+        for (unsigned int j = 0; j < sAddon->len; j++)
+        {
+            result.data[i + j] = sAddon->data[j];
+        }
+        // fini la chaine
+        result.data[result.len] = '\0';
+    }
+
+    return result;
+}
+
+String stringSlice(const String *s, const unsigned int start, unsigned int end)
+{
+    // reset des valeurs a 0
+    String result;
+    result.len = 0;
+    result.cap = 0;
+    result.data = (void *)0; // null
+
+    // verif reste au moins 1 char apres la coupe
+    if (s->len > start + end)
+    {
+        // set les nouvelles valeurs
+        result.len = s->len - start - end;
+        result.cap = result.len + 1;
+        result.data = (char *)memoryMalloc(result.cap);
+
+        if (result.data)
+        {
+            // ajoute la tranche
+            for (unsigned int i = 0; i < result.len; i++)
+                result.data[i] = s->data[i + start];
+
+            // fini la chaine
+            result.data[result.len] = '\0';
+        }
+    }
+    return result;
+}
+
+
+///////////////////////////
+// string.h
+///////////////////////////
+#ifndef string_H
+#define string_H
+
+/// @brief une struct qui permet de faire des chaine de char dynamique
+typedef struct
+{
+    char *data;
+    unsigned int len; // nombre de char sans \0
+    unsigned int cap; // capacité allouée
+} String;
+
+/**
+ * @brief creez un string sur base d'une chaine
+ *
+ * @param initial une chaine de base pour le string
+ *
+ * @return un nouveau string (a liberer avec freeString)
+ */
+String stringCreate(const char *initial);
+
+/**
+ * @brief libere l'espace d'un string et set tout a 0
+ *
+ * @param s le string a detruire
+ */
+void stringFree(String *s);
+
+/**
+ * @brief ajoute du text a un string
+ *
+ * @param s le string au quel ajouter le text
+ * @param text le text a ajouter
+ */
+void stringAppend(String *s, const char *text);
+
+/**
+ * @brief addition deux string ensemble
+ *
+ * @param a le premier string
+ * @param b le deuxieme string a ajouter au premier
+ *
+ * @return le nouveau string cree (a liberer)
+ */
+String stringAdd(const String *a, const String *b);
+
+/**
+ * @brief cree un string avec une partie d'un autre string
+ *
+ * @param a le string de base
+ * @param start ou on commence a copier
+ * @param end la ou on s'arrete (en partant de la fin)
+ *
+ * @return un nouveau string (a liberer)
+ */
+String stringSlice(const String *a, const unsigned int start, unsigned int end);
+
+#endif
+
+///////////////////////////
+// log\log.aklog
+///////////////////////////
+2025-09-17 22:22:17  C:/Users/Nico/Documents/github/allProgramme/c/test/log/log.aklog
+22:22:17  C:/Users/Nico/Documents/github/allProgramme/c/test/.vscode
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/akTool.config.json
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/build
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/gpt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/hex
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/launchvs.bat
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/log
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/main.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/platform
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_code.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_structure.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.h
+2025-09-17 22:22:56  C:/Users/Nico/Documents/github/allProgramme/c/test/log/log.aklog
+22:22:56  C:/Users/Nico/Documents/github/allProgramme/c/test/.vscode
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/akTool.config.json
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/build
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/gpt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/hex
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/launchvs.bat
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/log
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/main.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/platform
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_code.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_structure.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.h
+2025-09-17 22:24:23  C:/Users/Nico/Documents/github/allProgramme/c/test/log/log.aklog
+22:24:23  C:/Users/Nico/Documents/github/allProgramme/c/test/.vscode
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/akTool.config.json
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/build
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/gpt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/hex
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/launchvs.bat
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/log
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/main.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/platform
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_code.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_structure.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.h
+2025-09-17 22:25:09  C:/Users/Nico/Documents/github/allProgramme/c/test/log/log.aklog
+22:25:09  C:/Users/Nico/Documents/github/allProgramme/c/test/.vscode
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/akTool.config.json
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/build
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/gpt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/hex
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/launchvs.bat
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/log
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/main.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/platform
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_code.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_structure.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.h
+2025-09-17 22:26:05  C:/Users/Nico/Documents/github/allProgramme/c/test/log/log.aklog
+22:26:05  C:/Users/Nico/Documents/github/allProgramme/c/test/.vscode
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/akTool.config.json
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/build
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/gpt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/hex
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/launchvs.bat
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/log
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/main.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/platform
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_code.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_structure.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.h
+2025-09-17 22:27:51  C:/Users/Nico/Documents/github/allProgramme/c/test/log/log.aklog
+22:27:51  C:/Users/Nico/Documents/github/allProgramme/c/test/.vscode
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/akTool.config.json
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/build
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/gpt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/hex
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/launchvs.bat
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/log
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/main.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/platform
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_code.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_structure.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.h
+2025-09-17 22:30:43  C:/Users/Nico/Documents/github/allProgramme/c/test/log/log.aklog
+22:30:44  C:/Users/Nico/Documents/github/allProgramme/c/test/.vscode
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/akTool.config.json
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/build
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/dateTime.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/error.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/files.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/fonction.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/gpt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/hex
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/input.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/launchvs.bat
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/log
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/logic.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/main.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/memory.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/platform
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_code.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/project_structure.txt
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/render.h
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.c
+-> C:/Users/Nico/Documents/github/allProgramme/c/test/string.h
+
+
+///////////////////////////
+// log\log.c
+///////////////////////////
+#include "log.h"
+#include "../string.h"
+#include "../files.h"
+#include "../dateTime.h"
+#include "../fonction.h"
+
+String path;
+
+void initLog(void)
+{
+    char currentPath[MAX_PATH_LENGHT];
+    getCurrentPath(currentPath);
+    stringAppend(&path, currentPath);
+    stringAppend(&path, "/log/log.aklog");
+    normalizePathToSlash(path.data);
+
+    addToLog(path.data, 0x03);
+    addToLog("\n", 0x00);
+}
+
+unsigned char addToLog(char *data, unsigned char dateTime)
+{
+    createPathIfNotExists(path.data, 0x00);
+    if (dateTime)
+    {
+        addDateToLog(0x00);
+        addTimeToLog(0x00);
+        addToFile(path.data, " ");
+    }
+
+    return addToFile(path.data, data);
+}
+
+unsigned char addToLog(char *data, unsigned char dateTime)
+{
+    createPathIfNotExists(path.data, 0x00);
+    if (dateTime)
+    {
+        addDateToLog(0x00);
+        addTimeToLog(0x00);
+        addToFile(path.data, " ");
+    }
+
+    return addToFile(path.data, data);
+}
+
+static unsigned char addDateToLog(unsigned char endLine)
+{
+    unsigned short year, month, day;
+    getDate(&year, &month, &day);
+    char date[13];
+    u16To4Digits(date, year);
+    date[4] = '-';
+    u16To2Digits(date + 5, month);
+    date[7] = '-';
+    u16To2Digits(date + 8, day);
+    date[10] = ' ';
+    if (endLine)
+    {
+        date[11] = '\n';
+        date[12] = '\0';
+    }
+    date[11] = '\0';
+    return addToLog(date, 0x00);
+}
+
+static unsigned char addTimeToLog(unsigned char endLine)
+{
+    unsigned short hour, minute, second;
+    getTime(&hour, &minute, &second);
+    char time[11];
+    u16To2Digits(time, hour);
+    time[2] = ':';
+    u16To2Digits(time + 3, minute);
+    time[5] = ':';
+    u16To2Digits(time + 6, second);
+    time[8] = ' ';
+    if (endLine)
+    {
+        time[9] = '\n';
+        time[10] = '\0';
+    }
+    time[9] = '\0';
+    return addToLog(time, 0x00);
+}
+
+unsigned short getLogPath(char *outPath)
+{
+    outPath = path.data;
+    return path.len;
+}
+
+
+///////////////////////////
+// log\log.h
+///////////////////////////
+#ifndef log_H
+#define log_H
+
+/**
+ * @brief set le chemin du fichier principal et fais un test
+ */
+void initLog(void);
+
+/**
+ * @brief ajoute un contenu au fichier buffer
+ *
+ * @param data les donner a ajouter
+ * @param dateTime ajoute la date et l'heure ou pas
+ *
+ * @return si l'ajout au fichier a put se faire
+ */
+unsigned char addToLog(char *buffer, unsigned char dateTime);
+
+/**
+ * @brief ajout la date au fichier log
+ *
+ * @param endLine si on retourne a la ligne apres
+ *
+ * @return si l'ajout a put se faire
+ */
+static unsigned char addDateToLog(unsigned char endLine);
+
+/**
+ * @brief ajout l'heure au fichier log
+ *
+ * @param endLine si on retourne a la ligne apres
+ *
+ * @return si l'ajout a put se faire
+ */
+static unsigned char addTimeToLog(unsigned char endLine);
+
+/**
+ * @brief obtient le chemin du dossier log principal
+ *
+ * @param outPath le chemin
+ *
+ * @return la taille du chemin
+ */
+unsigned short getLogPath(char *outPath);
+
+#endif
+
+///////////////////////////
+// log\logController.h
+///////////////////////////
+
+
+///////////////////////////
+// log\logManager.h
+///////////////////////////
+
+
+///////////////////////////
+// platform\platform.c
+///////////////////////////
+#include "platform.h"
+EventQueue eventQueue = {0};
+
+///////////////////////////
+// platform\platform.h
+///////////////////////////
+#ifndef PLATFORM_H
+#define PLATFORM_H
+
+#define MAX_EVENTS 256
+#define MAX_TOUCH_POINTS 16 // nombre max de contacts multitouch simultanés
+#define MAX_RAW_EVENT_SIZE 32
+#define MAX_PATH_LENGHT 255
+
+/// @brief enum des types d'event
+typedef enum
+{
+    EVENT_NONE,
+    EVENT_QUIT,
+    EVENT_KEY_DOWN,
+    EVENT_KEY_UP,
+    EVENT_MOUSE_MOVE,
+    EVENT_MOUSE_BUTTON_DOWN,
+    EVENT_MOUSE_BUTTON_UP,
+    EVENT_MOUSE_WHEEL,
+    EVENT_MOUSE_RAW_MOVE,
+    EVENT_MOUSE_DOUBLE_CLICK,
+    EVENT_WINDOW_RESIZE,
+    EVENT_WINDOW_CLOSE,
+    EVENT_WINDOW_FOCUS,
+    EVENT_WINDOW_UNFOCUS,
+    EVENT_WINDOW_MINIMIZE,
+    EVENT_WINDOW_RESTORE,
+    EVENT_WINDOW_DPI_CHANGE,
+    EVENT_TOUCH,   // multitouch via WM_TOUCH
+    EVENT_POINTER, // stylet / pointer (WM_POINTER*)
+    EVENT_RAW
+} EventType;
+
+/// @brief structure pour stocker les events sous un format commun
+typedef struct
+{
+    EventType type;
+    union
+    {
+        struct
+        { // ---------------- Clavier
+            unsigned int keycode;
+            unsigned char shift, ctrl, alt, win;
+            unsigned char extended;
+            unsigned short repeat;
+            unsigned char pressed_before;
+        } key;
+
+        struct
+        {               // ---------------- Souris
+            int x, y;   // position absolue
+            int dx, dy; // delta relatif
+            int button; // 0=left, 1=right, 2=middle, 3/4=x1/x2
+            int delta;  // molette
+        } mouse;
+
+        struct
+        { // ---------------- Fenêtre
+            int width, height;
+        } window;
+
+        struct
+        { // ---------------- Multitouch basique
+            int count;
+            struct
+            {
+                int id, x, y;
+            } points[MAX_TOUCH_POINTS];
+        } touch;
+
+        struct
+        { // ---------------- Stylet / Pointer avancé
+            int x, y;
+            int pressure; // 0-1024 typiquement
+            int tilt_x;   // inclinaison X en degrés
+            int tilt_y;   // inclinaison Y en degrés
+            int rotation; // rotation de la pointe (si dispo)
+            int pointer_id;
+            int pointer_type; // PT_TOUCH, PT_PEN, PT_MOUSE
+        } pointer;
+    };
+
+    // Info brute pour debug
+    char rawEvent[MAX_RAW_EVENT_SIZE];
+    unsigned long rawSize;
+
+} Event;
+
+// queue d'event
+typedef struct
+{
+    Event queue[MAX_EVENTS];
+    int start;
+    int end;
+} EventQueue;
+
+typedef struct
+{
+    char **items; // tableau de chemins
+    unsigned int count;
+} DirList;
+
+static int last_mouse_x = 0;
+static int last_mouse_y = 0;
+
+extern EventQueue eventQueue;
+
+// Fonctions d'état
+int platformIsSpacePressed(void);
+unsigned char platformIsRunning(void);
+
+// Fonctions de rendu
+void platformInitRender(int w, int h);
+void platformRenderFrame(unsigned int *pixels);
+void platformShutdownRender(void);
+
+// Fonctions input
+void platformInitInput(void);
+void platformProcessInput(void);
+
+// Fonctions fichier
+unsigned short platformGetCurrentPath(char *buffer);
+unsigned char platformWriteFile(const char *filename, const char *data, unsigned long size);
+unsigned char platformAppendToFile(const char *filename, const char *data);
+void *platformReadFileBinary(const char *path, unsigned long *out_size);
+void platformFreeFileBinary(void *buffer);
+unsigned char platformFileExists(const char *path);
+unsigned char platformDirExists(const char *path);
+unsigned char platformPathExists(const char *path);
+unsigned char platformCreateDir(const char *path);
+DirList platformListDir(const char *path);
+
+// Fonctions event
+static unsigned char platformPushEvent(Event event);
+unsigned char platformGetEvent(Event *out);
+void platformInitEventQueue(void);
+
+static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsigned char *alt, unsigned char *win);
+
+// fonctions memoire
+void *platformMemoryAlloc(unsigned int size);
+void platfromMemoryFree(void *ptr);
+
+// fonctions date time
+void platformGetDate(unsigned short *year, unsigned short *month, unsigned short *day);
+void platformGetTime(unsigned short *hour, unsigned short *minute, unsigned short *second);
+
+#endif
+
+
+///////////////////////////
+// platform\platform_linux.c
+///////////////////////////
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include "../render.h"
+#include "../input.h"
+
+static Display *display;
+static Window window;
+static GC gc;
+static XImage *ximage;
+static int width, height;
+static unsigned int *screen_buffer;
+
+static int space_pressed = 0; // toggle mouvement
+
+// --- INPUT ---
+int platformIsSpacePressed(void)
+{
+    return space_pressed;
+}
+
+// --- RENDER ---
+void platformInitRender(int w, int h)
+{
+    width = w;
+    height = h;
+
+    // allocation mémoire avec Xlib (pas stdlib.h)
+    screen_buffer = (unsigned int *)Xmalloc(sizeof(unsigned int) * w * h);
+
+    display = XOpenDisplay(0);
+    if (!display)
+        return;
+
+    int screen = DefaultScreen(display);
+
+    window = XCreateSimpleWindow(
+        display,
+        RootWindow(display, screen),
+        0, 0, width, height,
+        1,
+        BlackPixel(display, screen),
+        WhitePixel(display, screen));
+
+    XSelectInput(display, window,
+                 ExposureMask | KeyPressMask | StructureNotifyMask);
+    XMapWindow(display, window);
+
+    gc = DefaultGC(display, screen);
+
+    ximage = XCreateImage(
+        display,
+        DefaultVisual(display, screen),
+        DefaultDepth(display, screen),
+        ZPixmap,
+        0,
+        (char *)screen_buffer,
+        width,
+        height,
+        32,
+        0);
+}
+
+void platformRenderFrame(unsigned int *pixels)
+{
+    // copie manuelle (pas memcpy)
+    int n = width * height;
+    for (int i = 0; i < n; i++)
+    {
+        screen_buffer[i] = pixels[i];
+    }
+
+    XPutImage(display, window, gc, ximage,
+              0, 0, 0, 0,
+              width, height);
+
+    XFlush(display);
+}
+
+void platformShutdownRender(void)
+{
+    if (ximage)
+    {
+        ximage->data = 0; // éviter double free
+        XDestroyImage(ximage);
+    }
+
+    if (screen_buffer)
+        Xfree(screen_buffer);
+
+    if (display)
+        XCloseDisplay(display);
+}
+
+// --- INPUT ---
+void platformInitInput(void)
+{
+    // Rien à faire ici
+}
+
+void platformProcessInput(void)
+{
+    XEvent event;
+    while (XPending(display))
+    {
+        XNextEvent(display, &event);
+
+        switch (event.type)
+        {
+        case KeyPress:
+        {
+            KeySym sym = XLookupKeysym(&event.xkey, 0);
+            if (sym == XK_Escape)
+                _exit(0); // pas stdlib
+            else if (sym == XK_space)
+                space_pressed = !space_pressed; // toggle
+            break;
+        }
+        case DestroyNotify:
+            _exit(0);
+        }
+    }
+}
+
+
+///////////////////////////
+// platform\platform_win.c
+///////////////////////////
+#include <windows.h>
+#include <windowsx.h>
+#include "platform.h"
+#include "../render.h"
+#include "../input.h"
+
+static HWND hwnd; // handle de la fenetre
+static HDC hdc;   // context pour dessiner
+static int width, height;
+static unsigned int *screen_buffer;     // tableau des pixel
+static unsigned char space_pressed = 0; // boolean de la touche space
+static unsigned char running = 1;       // bool si le programme tourne
+static CRITICAL_SECTION queue_lock;
+
+/**
+ * @brief fonction appeller a chaque message pour la fenetre
+ *
+ * @param hwnd la fenetre
+ * @param msg le type du message
+ * @param wParam info sup
+ * @param lParam info sup aussi
+ */
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    Event event;
+    event.type = EVENT_NONE;
+    if (event.rawEvent && sizeof(WPARAM) + sizeof(LPARAM) <= MAX_RAW_EVENT_SIZE)
+    {
+        // copier les valeurs
+        *(WPARAM *)(event.rawEvent) = wParam;
+        *(LPARAM *)(event.rawEvent + sizeof(WPARAM)) = lParam;
+        event.rawSize = sizeof(WPARAM) + sizeof(LPARAM);
+    }
+    // *(WPARAM *)(event.rawEvent) = wParam;
+    // *(LPARAM *)(event.rawEvent + sizeof(WPARAM)) = lParam;
+    // event.rawSize = sizeof(WPARAM) + sizeof(LPARAM);
+
+    switch (msg)
+    {
+
+    // ----------- FERMETURE & FOCUS
+    case WM_DESTROY:
+        event.type = EVENT_QUIT;
+        running = 0;
+        PostQuitMessage(0);
+        break;
+
+    case WM_CLOSE:
+        event.type = EVENT_WINDOW_CLOSE;
+        break;
+
+    case WM_SETFOCUS:
+        event.type = EVENT_WINDOW_FOCUS;
+        break;
+
+    case WM_KILLFOCUS:
+        event.type = EVENT_WINDOW_UNFOCUS;
+        break;
+
+    case WM_SIZE:
+        event.type = EVENT_WINDOW_RESIZE;
+        event.window.width = LOWORD(lParam);
+        event.window.height = HIWORD(lParam);
+        break;
+
+    case WM_SYSCOMMAND:
+        if ((wParam & 0xFFF0) == SC_MINIMIZE)
+            event.type = EVENT_WINDOW_MINIMIZE;
+        else if ((wParam & 0xFFF0) == SC_RESTORE)
+            event.type = EVENT_WINDOW_RESTORE;
+        break;
+
+    case WM_DPICHANGED:
+        event.type = EVENT_WINDOW_DPI_CHANGE;
+        break;
+
+    // ----------- CLAVIER
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+        event.type = EVENT_KEY_DOWN;
+        event.key.keycode = (unsigned int)wParam;
+        platformGetModifiers(&event.key.shift, &event.key.ctrl, &event.key.alt, &event.key.win);
+        event.key.repeat = LOWORD(lParam);
+        event.key.extended = (lParam & (1 << 24)) ? 1 : 0;
+        event.key.pressed_before = (lParam & (1 << 30)) ? 1 : 0;
+        break;
+
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+        event.type = EVENT_KEY_UP;
+        event.key.keycode = (unsigned int)wParam;
+        platformGetModifiers(&event.key.shift, &event.key.ctrl, &event.key.alt, &event.key.win);
+        event.key.repeat = LOWORD(lParam);
+        event.key.extended = (lParam & (1 << 24)) ? 1 : 0;
+        event.key.pressed_before = (lParam & (1 << 30)) ? 1 : 0;
+        break;
+
+    // ----------- SOURIS
+    case WM_MOUSEMOVE:
+        event.type = EVENT_MOUSE_MOVE;
+        event.mouse.x = GET_X_LPARAM(lParam);
+        event.mouse.y = GET_Y_LPARAM(lParam);
+        event.mouse.dx = event.mouse.x - last_mouse_x;
+        event.mouse.dy = event.mouse.y - last_mouse_y;
+        last_mouse_x = event.mouse.x;
+        last_mouse_y = event.mouse.y;
+        break;
+
+    case WM_LBUTTONDBLCLK:
+        event.type = EVENT_MOUSE_DOUBLE_CLICK;
+        event.mouse.button = 0;
+        goto mouse_pos;
+
+    case WM_LBUTTONDOWN:
+        event.type = EVENT_MOUSE_BUTTON_DOWN;
+        event.mouse.button = 0;
+        goto mouse_pos;
+    case WM_LBUTTONUP:
+        event.type = EVENT_MOUSE_BUTTON_UP;
+        event.mouse.button = 0;
+        goto mouse_pos;
+    case WM_RBUTTONDOWN:
+        event.type = EVENT_MOUSE_BUTTON_DOWN;
+        event.mouse.button = 1;
+        goto mouse_pos;
+    case WM_RBUTTONUP:
+        event.type = EVENT_MOUSE_BUTTON_UP;
+        event.mouse.button = 1;
+        goto mouse_pos;
+    case WM_MBUTTONDOWN:
+        event.type = EVENT_MOUSE_BUTTON_DOWN;
+        event.mouse.button = 2;
+        goto mouse_pos;
+    case WM_MBUTTONUP:
+        event.type = EVENT_MOUSE_BUTTON_UP;
+        event.mouse.button = 2;
+        goto mouse_pos;
+    case WM_XBUTTONDOWN:
+        event.type = EVENT_MOUSE_BUTTON_DOWN;
+        event.mouse.button = (HIWORD(wParam) == XBUTTON1 ? 3 : 4);
+        goto mouse_pos;
+    case WM_XBUTTONUP:
+        event.type = EVENT_MOUSE_BUTTON_UP;
+        event.mouse.button = (HIWORD(wParam) == XBUTTON1 ? 3 : 4);
+        goto mouse_pos;
+    case WM_MOUSEWHEEL:
+        event.type = EVENT_MOUSE_WHEEL;
+        event.mouse.delta = GET_WHEEL_DELTA_WPARAM(wParam);
+        goto mouse_pos;
+
+    mouse_pos:
+        event.mouse.x = GET_X_LPARAM(lParam);
+        event.mouse.y = GET_Y_LPARAM(lParam);
+        event.mouse.dx = event.mouse.x - last_mouse_x;
+        event.mouse.dy = event.mouse.y - last_mouse_y;
+        last_mouse_x = event.mouse.x;
+        last_mouse_y = event.mouse.y;
+        break;
+
+    // ----------- MULTITOUCH (WM_TOUCH)
+    case WM_TOUCH:
+    {
+        TOUCHINPUT ti[MAX_TOUCH_POINTS];
+        UINT count = LOWORD(wParam);
+        if (count > MAX_TOUCH_POINTS)
+            count = MAX_TOUCH_POINTS;
+        if (GetTouchInputInfo((HTOUCHINPUT)lParam, count, ti, sizeof(TOUCHINPUT)))
+        {
+            event.type = EVENT_TOUCH;
+            event.touch.count = count;
+            for (UINT i = 0; i < count; i++)
+            {
+                event.touch.points[i].id = ti[i].dwID;
+                event.touch.points[i].x = ti[i].x / 100; // coordonnées en px
+                event.touch.points[i].y = ti[i].y / 100;
+            }
+            CloseTouchInputHandle((HTOUCHINPUT)lParam);
+        }
+        break;
+    }
+
+    // ----------- WM_POINTER (Stylet / Trackpad / Touch avancé)
+    case WM_POINTERDOWN:
+    case WM_POINTERUPDATE:
+    case WM_POINTERUP:
+    {
+        POINTER_INFO pi;
+        if (GetPointerInfo(GET_POINTERID_WPARAM(wParam), &pi))
+        {
+            event.type = EVENT_POINTER;
+            event.pointer.pointer_id = pi.pointerId;
+            event.pointer.pointer_type = pi.pointerType;
+            event.pointer.x = pi.ptPixelLocation.x;
+            event.pointer.y = pi.ptPixelLocation.y;
+
+            // Si c'est un stylet, lire les infos supplémentaires
+            if (pi.pointerType == PT_PEN)
+            {
+                POINTER_PEN_INFO penInfo;
+                if (GetPointerPenInfo(pi.pointerId, &penInfo))
+                {
+                    event.pointer.pressure = penInfo.pressure;
+                    event.pointer.tilt_x = penInfo.tiltX;
+                    event.pointer.tilt_y = penInfo.tiltY;
+                    event.pointer.rotation = penInfo.rotation;
+                }
+            }
+        }
+        break;
+    }
+
+    default:
+        event.type = EVENT_RAW;
+        break;
+    }
+
+    // platformPushEvent(event);
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsigned char *alt, unsigned char *win)
+{
+    *shift = (GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 0;
+    *ctrl = (GetKeyState(VK_CONTROL) & 0x8000) ? 1 : 0;
+    *alt = (GetKeyState(VK_MENU) & 0x8000) ? 1 : 0;
+    *win = (GetKeyState(VK_LWIN) & 0x8000 || GetKeyState(VK_RWIN) & 0x8000) ? 1 : 0;
+}
+
+/**
+ * @brief savoir si l'app tourne encore
+ */
+unsigned char platformIsRunning(void)
+{
+    return running;
+}
+
+/**
+ * @brief
+ *
+ * @param w la largeur de la fenetre
+ * @param h la hauteur de la fenetre
+ */
+void platformInitRender(int w, int h)
+{
+    width = w;
+    height = h;
+    screen_buffer = (unsigned int *)malloc(sizeof(unsigned int) * w * h);
+
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    WNDCLASS wc = {0};
+    wc.lpfnWndProc = WndProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = "PixelWindow";
+    RegisterClass(&wc);
+
+    hwnd = CreateWindowEx(
+        0, "PixelWindow", "Pixel Window",
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT, width, height,
+        NULL, NULL, hInstance, NULL);
+
+    hdc = GetDC(hwnd);
+}
+
+void platformRenderFrame(unsigned int *pixels)
+{
+    // Copier pixels dans buffer interne
+    memcpy(screen_buffer, pixels, sizeof(unsigned int) * width * height);
+
+    BITMAPINFO bmi = {0};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = width;
+    bmi.bmiHeader.biHeight = -height; // top-down
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    StretchDIBits(
+        hdc,
+        0, 0, width, height,
+        0, 0, width, height,
+        screen_buffer,
+        &bmi,
+        DIB_RGB_COLORS,
+        SRCCOPY);
+}
+
+void platformShutdownRender(void)
+{
+    if (screen_buffer)
+        free(screen_buffer);
+}
+
+void platformInitInput(void)
+{
+    // Rien à faire pour Windows
+}
+
+void platformProcessInput(void)
+{
+    MSG msg;
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+}
+
+// Expose l’état pour input.c
+int platformIsSpacePressed(void)
+{
+    return space_pressed;
+}
+
+// #region gestion fichier/dossier
+
+unsigned short platformGetCurrentPath(char *path)
+{
+    return GetCurrentDirectoryA(MAX_PATH_LENGHT, path);
+}
+
+unsigned char platformWriteFile(const char *filename, const char *data, unsigned long size)
+{
+    HANDLE hFile;
+    DWORD bytesWritten;
+
+    hFile = CreateFileA(
+        filename,              // nom du fichier (ANSI)
+        GENERIC_WRITE,         // accès en écriture
+        0,                     // pas de partage
+        NULL,                  // sécurité par défaut
+        CREATE_ALWAYS,         // crée ou écrase le fichier
+        FILE_ATTRIBUTE_NORMAL, // attributs normaux
+        NULL                   // pas de modèle
+    );
+
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    unsigned char result = WriteFile(hFile, data, (DWORD)size, &bytesWritten, NULL);
+    CloseHandle(hFile);
+
+    return result;
+}
+
+unsigned char platformAppendToFile(const char *filename, const char *data)
+{
+    HANDLE hFile;
+    DWORD bytesWritten;
+
+    hFile = CreateFileA(
+        filename,              // nom du fichier
+        FILE_APPEND_DATA,      // droit d'ajouter des données
+        FILE_SHARE_READ,       // permet la lecture en parallèle
+        NULL,                  // sécurité par défaut
+        OPEN_ALWAYS,           // ouvre ou crée le fichier
+        FILE_ATTRIBUTE_NORMAL, // attributs normaux
+        NULL                   // pas de modèle
+    );
+
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        return 0; // erreur
+    }
+
+    // Déplacer le curseur à la fin (optionnel avec FILE_APPEND_DATA, mais sûr)
+    SetFilePointer(hFile, 0, NULL, FILE_END);
+
+    BOOL result = WriteFile(hFile, data, (DWORD)strlen(data), &bytesWritten, NULL);
+    CloseHandle(hFile);
+
+    return result ? 1 : 0;
+}
+
+void *platformReadFileBinary(const char *path, unsigned long *out_size)
+{
+    if (!path || !out_size)
+        return NULL;
+
+    HANDLE hFile = CreateFileA(
+        path,
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return NULL;
+
+    DWORD size = GetFileSize(hFile, NULL);
+    if (size == INVALID_FILE_SIZE || size == 0)
+    {
+        CloseHandle(hFile);
+        *out_size = 0;
+        return NULL;
+    }
+
+    void *buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!buffer)
+    {
+        CloseHandle(hFile);
+        *out_size = 0;
+        return NULL;
+    }
+
+    DWORD read_bytes = 0;
+    if (!ReadFile(hFile, buffer, size, &read_bytes, NULL) || read_bytes != size)
+    {
+        HeapFree(GetProcessHeap(), 0, buffer);
+        CloseHandle(hFile);
+        *out_size = 0;
+        return NULL;
+    }
+
+    CloseHandle(hFile);
+    *out_size = (unsigned long)size;
+    return buffer;
+}
+
+unsigned char platformFileExists(const char *path)
+{
+    DWORD attrib = GetFileAttributesA(path);
+    if (attrib == INVALID_FILE_ATTRIBUTES)
+        return 0;                                    // n'existe pas
+    return (attrib & FILE_ATTRIBUTE_DIRECTORY) == 0; // vrai si ce n'est PAS un répertoire
+}
+
+unsigned char platformDirExists(const char *path)
+{
+    DWORD attrib = GetFileAttributesA(path);
+    if (attrib == INVALID_FILE_ATTRIBUTES)
+        return 0;                                    // n'existe pas
+    return (attrib & FILE_ATTRIBUTE_DIRECTORY) != 0; // vrai si c'est un dossier
+}
+
+unsigned char platformPathExists(const char *path)
+{
+    DWORD attrib = GetFileAttributesA(path);
+    return attrib != INVALID_FILE_ATTRIBUTES; // n'existe pas
+}
+
+unsigned char platformCreateDir(const char *path)
+{
+    if (CreateDirectoryA(path, NULL))
+        return 1; // succès
+    return 0;     // échec (déjà existant ou erreur)
+}
+
+DirList platformListDir(const char *path)
+{
+    DirList result;
+    result.items = (char **)0;
+    result.count = 0;
+
+    WIN32_FIND_DATAA findData;
+    char searchPath[MAX_PATH];
+
+    // Construire le chemin de recherche : "C:/mon/dossier/*"
+    int i = 0;
+    while (path[i] && i < (MAX_PATH - 3))
+    {
+        searchPath[i] = path[i];
+        i++;
+    }
+    searchPath[i++] = '/';
+    searchPath[i++] = '*';
+    searchPath[i] = '\0';
+
+    HANDLE hFind = FindFirstFileA(searchPath, &findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return result; // retourne vide si erreur
+
+    // Première passe : compter les entrées
+    unsigned int count = 0;
+    do
+    {
+        if (findData.cFileName[0] == '.' &&
+            (findData.cFileName[1] == '\0' ||
+             (findData.cFileName[1] == '.' && findData.cFileName[2] == '\0')))
+            continue; // ignorer "." et ".."
+
+        count++;
+    } while (FindNextFileA(hFind, &findData));
+
+    FindClose(hFind);
+
+    if (count == 0)
+        return result; // aucun fichier -> retourne vide
+
+    // Allouer le tableau de pointeurs
+    result.items = (char **)malloc(count * sizeof(char *));
+    if (!result.items)
+        return result;
+
+    // Deuxième passe : stocker les noms
+    hFind = FindFirstFileA(searchPath, &findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return result; // improbable mais sécurité
+
+    unsigned int index = 0;
+    do
+    {
+        if (findData.cFileName[0] == '.' &&
+            (findData.cFileName[1] == '\0' ||
+             (findData.cFileName[1] == '.' && findData.cFileName[2] == '\0')))
+            continue;
+
+        // Construire le chemin complet
+        int len = 0;
+        while (path[len])
+            len++;
+        int fileLen = 0;
+        while (findData.cFileName[fileLen])
+            fileLen++;
+
+        int fullLen = len + 1 + fileLen;                   // +1 pour '\'
+        result.items[index] = (char *)malloc(fullLen + 1); // +1 pour '\0'
+
+        if (result.items[index])
+        {
+            int k = 0;
+            for (int j = 0; j < len; j++)
+                result.items[index][k++] = path[j];
+            result.items[index][k++] = '/';
+            for (int j = 0; j < fileLen; j++)
+                result.items[index][k++] = findData.cFileName[j];
+            result.items[index][k] = '\0';
+        }
+
+        index++;
+    } while (FindNextFileA(hFind, &findData));
+
+    FindClose(hFind);
+    result.count = count;
+
+    return result;
+}
+
+void platformFreeFileBinary(void *buffer)
+{
+    if (buffer)
+        HeapFree(GetProcessHeap(), 0, buffer);
+}
+
+// #endregion
+
+// #region gestion event queue
+
+static unsigned char platformPushEvent(Event event)
+{
+    // lock la queue
+    EnterCriticalSection(&queue_lock);
+    int next = (eventQueue.end + 1) % MAX_EVENTS; // si max reviens a 0
+    if (next == eventQueue.start)
+    {
+        // queue pleine : on decale le debut
+        eventQueue.start = (eventQueue.start + 1) % MAX_EVENTS; // si max reviens a 0
+    }
+    // ecrit l'event et set le dernier numero
+    eventQueue.queue[eventQueue.end] = event;
+    eventQueue.end = next;
+    // delock la queue
+    LeaveCriticalSection(&queue_lock);
+}
+
+unsigned char platformGetEvent(Event *out)
+{
+    // lock la queue
+    EnterCriticalSection(&queue_lock);
+    if (eventQueue.start == eventQueue.end)
+    {
+        LeaveCriticalSection(&queue_lock);
+        return 0;
+    }
+    *out = eventQueue.queue[eventQueue.start];
+    eventQueue.start = (eventQueue.start + 1) % MAX_EVENTS;
+    // delock la queue
+    LeaveCriticalSection(&queue_lock);
+    return 1;
+}
+
+void platformInitEventQueue()
+{
+    // init le system de lockage
+    InitializeCriticalSection(&queue_lock);
+}
+// #endregion
+
+// #region memory
+
+void *platformMemoryAlloc(unsigned int size)
+{
+    return malloc(size); // renvoie un pointeur ou NULL si erreur
+}
+
+void platfromMemoryFree(void *ptr)
+{
+    free(ptr); // libère le bloc
+}
+// #endregion
+
+// #region date time
+
+void platformGetDate(unsigned short *year, unsigned short *month, unsigned short *day)
+{
+    SYSTEMTIME st;
+    GetLocalTime(&st); // Récupère la date/heure locale
+    if (year)
+        *year = st.wYear;
+    if (month)
+        *month = st.wMonth;
+    if (day)
+        *day = st.wDay;
+}
+
+void platformGetTime(unsigned short *hour, unsigned short *minute, unsigned short *second)
+{
+    SYSTEMTIME st;
+    GetLocalTime(&st); // Récupère la date/heure locale
+    if (hour)
+        *hour = st.wHour;
+    if (minute)
+        *minute = st.wMinute;
+    if (second)
+        *second = st.wSecond;
+}
+// #endregion
+

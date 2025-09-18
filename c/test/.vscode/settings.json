@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "*.dbclient-js": "javascript",
+        "*.akf": "code-text-binary",
+        "memory.h": "c",
+        "string.h": "c",
+        "files.h": "c",
+        "datetime.h": "c",
+        "render.h": "c",
+        "input.h": "c",
+        "logic.h": "c"
+    }
+}

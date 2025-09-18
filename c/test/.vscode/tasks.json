@@ -1,0 +1,65 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-windows-gcc",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                //fichier inclu
+                "main.c",
+                "logic.c",
+                "render.c",
+                "input.c",
+                "files.c",
+                "memory.c",
+                "string.c",
+                "log/log.c",
+                "dateTime.c",
+                "fonction.c",
+                "platform/platform.c",
+                "platform/platform_win.c",
+                //output
+                "-o",
+                "build/testapp.exe",
+                //lib lier
+                "-lgdi32",
+                "-luser32",
+                //pas de cmd
+                "-mwindows"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "build-linux-gcc",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                "main.c",
+                "logic.c",
+                "render.c",
+                "input.c",
+                "files.c",
+                "memory.c",
+                "string.c",
+                "log/log.c",
+                "dateTime.c",
+                "fonction.c",
+                "platform/platform.c",
+                "platform/platform_linux.c",
+                "-o",
+                "build/main_linux",
+                "-lX11"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": "$gcc"
+        }
+    ]
+}

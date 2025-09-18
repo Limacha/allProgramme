@@ -1,0 +1,33 @@
+=== Structure du projet ===
+
+├F─ dateTime.c
+├F─ dateTime.h
+├F─ error.c
+├F─ error.h
+├F─ files.c
+├F─ files.h
+├F─ fonction.c
+├F─ fonction.h
+├F─ input.c
+├F─ input.h
+├F─ logic.c
+├F─ logic.h
+├F─ main.c
+├F─ memory.c
+├F─ memory.h
+├F─ render.c
+├F─ render.h
+├F─ string.c
+├F─ string.h
+├D─ log
+│   ├F─ log.aklog
+│   ├F─ log.c
+│   ├F─ log.h
+│   ├F─ logController.h
+│   ├F─ logManager.h
+├D─ platform
+│   ├F─ platform.c
+│   ├F─ platform.h
+│   ├F─ platform_linux.c
+│   ├F─ platform_win.c
+

@@ -1,0 +1,24 @@
+{
+  "StructureConfig": {
+    "excludeFolders": [
+      "build",
+      ".vscode",
+      "gpt",
+      "hex"
+    ],
+    "excludeExtensions": [],
+    "excludeFiles": [],
+    "excludeName": [
+      "launchvs.bat",
+      "project_structure.txt",
+      "project_code.txt",
+      "akTool.config.json"
+    ],
+    "excludeCode": {
+      "folders": [],
+      "extensions": [],
+      "files": [],
+      "name": []
+    }
+  }
+}
