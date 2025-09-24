@@ -4,4 +4,7 @@
 void getDate(unsigned short *year, unsigned short *month, unsigned short *day);
 void getTime(unsigned short *hour, unsigned short *minute, unsigned short *second);
 
+char *createDateChain();
+char *createTimeChain();
+
 #endif

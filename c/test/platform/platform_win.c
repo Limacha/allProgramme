@@ -450,11 +450,11 @@ unsigned char platformCreateDir(const char *path)
     return 0;     // échec (déjà existant ou erreur)
 }
 
-DirList platformListDir(const char *path)
+char **platformListDir(const char *path, unsigned int *outCount)
 {
-    DirList result;
-    result.items = (char **)0;
-    result.count = 0;
+    char **result;
+    result = (char **)0;
+    outCount = 0;
 
     WIN32_FIND_DATAA findData;
     char searchPath[MAX_PATH];
@@ -492,8 +492,8 @@ DirList platformListDir(const char *path)
         return result; // aucun fichier -> retourne vide
 
     // Allouer le tableau de pointeurs
-    result.items = (char **)malloc(count * sizeof(char *));
-    if (!result.items)
+    result = (char **)malloc(count * sizeof(char *));
+    if (!result)
         return result;
 
     // Deuxième passe : stocker les noms
@@ -517,25 +517,25 @@ DirList platformListDir(const char *path)
         while (findData.cFileName[fileLen])
             fileLen++;
 
-        int fullLen = len + 1 + fileLen;                   // +1 pour '\'
-        result.items[index] = (char *)malloc(fullLen + 1); // +1 pour '\0'
+        int fullLen = len + 1 + fileLen;             // +1 pour '\'
+        result[index] = (char *)malloc(fullLen + 1); // +1 pour '\0'
 
-        if (result.items[index])
+        if (result[index])
         {
             int k = 0;
             for (int j = 0; j < len; j++)
-                result.items[index][k++] = path[j];
-            result.items[index][k++] = '/';
+                result[index][k++] = path[j];
+            result[index][k++] = '/';
             for (int j = 0; j < fileLen; j++)
-                result.items[index][k++] = findData.cFileName[j];
-            result.items[index][k] = '\0';
+                result[index][k++] = findData.cFileName[j];
+            result[index][k] = '\0';
         }
 
         index++;
     } while (FindNextFileA(hFind, &findData));
 
     FindClose(hFind);
-    result.count = count;
+    outCount = count;
 
     return result;
 }

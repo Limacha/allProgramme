@@ -94,12 +94,6 @@ typedef struct
     int end;
 } EventQueue;
 
-typedef struct
-{
-    char **items; // tableau de chemins
-    unsigned int count;
-} DirList;
-
 static int last_mouse_x = 0;
 static int last_mouse_y = 0;
 
@@ -128,7 +122,7 @@ unsigned char platformFileExists(const char *path);
 unsigned char platformDirExists(const char *path);
 unsigned char platformPathExists(const char *path);
 unsigned char platformCreateDir(const char *path);
-DirList platformListDir(const char *path);
+char **platformListDir(const char *path, unsigned int *outCount);
 
 // Fonctions event
 static unsigned char platformPushEvent(Event event);
