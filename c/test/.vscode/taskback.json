@@ -1,0 +1,153 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-windows-gcc",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                //fichier inclu
+                "main.c",
+                "logic.c",
+                "render.c",
+                "input.c",
+                "files.c",
+                "memory.c",
+                "string.c",
+                "log/log.c",
+                "dateTime.c",
+                "fonction.c",
+                "path.c",
+                "platform/platform.c",
+                "platform/platform_win.c",
+                //output
+                "-o",
+                "build/testapp.exe",
+                //lib lier
+                "-lgdi32",
+                "-luser32",
+                //pas de cmd
+                "-mwindows"
+            ],
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "build-linux-gcc",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                "main.c",
+                "logic.c",
+                "render.c",
+                "input.c",
+                "files.c",
+                "memory.c",
+                "string.c",
+                "log/log.c",
+                "dateTime.c",
+                "fonction.c",
+                "path.c",
+                "platform/platform.c",
+                "platform/platform_linux.c",
+                "-o",
+                "build/main_linux",
+                "-lX11"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "create-build-folders",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/c",
+                "if not exist build mkdir build && if not exist build\\obj mkdir build\\obj"
+            ]
+        },
+        {
+            "label": "build-debug-cl",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/c",
+                "C:\\Progra~1\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat && ",
+                "cl.exe",
+                "main.c",
+                "logic.c",
+                "render.c",
+                "input.c",
+                "files.c",
+                "memory.c",
+                "string.c",
+                "log/log.c",
+                "dateTime.c",
+                "fonction.c",
+                "path.c",
+                "platform/platform.c",
+                "platform/platform_win.c",
+                "/Fo:build\\obj\\",
+                "/Fe:build\\testapp-debug.exe",
+                "/EHsc",
+                "/Zi",
+                "/nologo"
+            ],
+            "dependsOn": [
+                "create-build-folders"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-release-cl",
+            "type": "shell",
+            "command": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+            "args": [
+                "main.c",
+                "logic.c",
+                "render.c",
+                "input.c",
+                "files.c",
+                "memory.c",
+                "string.c",
+                "log/log.c",
+                "dateTime.c",
+                "fonction.c",
+                "path.c",
+                "platform/platform.c",
+                "platform/platform_win.c",
+                "/Fo:build\\obj\\", // Dossier pour .obj
+                "/Fe:build\\testapp.exe", // Fichier .exe
+                "/EHsc", // Exceptions sûres
+                "/Zi", // Debug info
+                "/nologo", // Pas de bannière MSVC
+                "/link",
+                "user32.lib",
+                "gdi32.lib",
+                "/SUBSYSTEM:WINDOWS" // Pas de console (comme -mwindows)
+            ],
+            "dependsOn": [
+                "setup-msvc",
+                "create-build-folders"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-all",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "build-debug-cl",
+                "build-release-cl"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

@@ -1,6 +1,7 @@
 #include "log.h"
 #include "../files.h"
 #include "../dateTime.h"
+#include "../path.h"
 
 unsigned char addToLog(char *path, char *data, unsigned char dateTime)
 {
