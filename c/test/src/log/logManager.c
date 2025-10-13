@@ -1,3 +1,7 @@
+#include "logManager.h"
+#include "../string.h"
+#include "log.h"
+#include "../path.h"
 
 String path;
 
@@ -5,24 +9,25 @@ void initLog(void)
 {
     char *currentPath;
     getCurrentPath(currentPath);
+    path.data = "";
     stringAppend(&path, currentPath);
     stringAppend(&path, "/log/log.aklog");
     normalizePathToSlash(path.data);
 
-    addToLog(path.data, 0x03);
-    addToLog("\n", 0x00);
+    addToLog(path.data, path.data, 0x03);
+    addToLog(path.data, "\n", 0x00);
 }
 
 unsigned char addContentToLog(char *data)
 {
-    return addToLog(data, 0xFF);
+    return addToLog(path.data, data, 0xFF);
 }
 
 unsigned char addSizedContentToLog(char *data, unsigned long size)
 {
     String sData = {data};
     stringSlice(&sData, 0, size);
-    unsigned char result = addToLog(sData.data, 0xFF);
+    unsigned char result = addToLog(path.data, sData.data, 0xFF);
 
     stringFree(&sData);
     return result;

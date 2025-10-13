@@ -1,5 +1,6 @@
 #include "dateTime.h"
 #include "platform/platform.h"
+#include "fonction.h"
 
 void getDate(unsigned short *year, unsigned short *month, unsigned short *day)
 {

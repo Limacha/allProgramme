@@ -1,0 +1,126 @@
+==============================
+4) Compilation GCC - DEBUG
+==============================
+gcc détecté - Debug build
+gcc (Debian 14.2.0-19) 14.2.0
+Copyright (C) 2024 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Compilation : src/main.c -> build/linux/obj_debug/main.o
+Compilation : src/logic.c -> build/linux/obj_debug/logic.o
+Compilation : src/render.c -> build/linux/obj_debug/render.o
+In file included from src/render.c:2:
+src/platform/platform.h:128:22: warning: ‘platformPushEvent’ declared ‘static’ but never defined [-Wunused-function]
+  128 | static unsigned char platformPushEvent(Event event);
+      |                      ^~~~~~~~~~~~~~~~~
+src/platform/platform.h:132:13: warning: ‘platformGetModifiers’ declared ‘static’ but never defined [-Wunused-function]
+  132 | static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsigned char *alt, unsigned char *win);
+      |             ^~~~~~~~~~~~~~~~~~~~
+src/platform/platform.h:98:12: warning: ‘last_mouse_y’ defined but not used [-Wunused-variable]
+   98 | static int last_mouse_y = 0;
+      |            ^~~~~~~~~~~~
+src/platform/platform.h:97:12: warning: ‘last_mouse_x’ defined but not used [-Wunused-variable]
+   97 | static int last_mouse_x = 0;
+      |            ^~~~~~~~~~~~
+Compilation : src/input.c -> build/linux/obj_debug/input.o
+In file included from src/input.c:3:
+src/platform/platform.h:128:22: warning: ‘platformPushEvent’ declared ‘static’ but never defined [-Wunused-function]
+  128 | static unsigned char platformPushEvent(Event event);
+      |                      ^~~~~~~~~~~~~~~~~
+src/platform/platform.h:132:13: warning: ‘platformGetModifiers’ declared ‘static’ but never defined [-Wunused-function]
+  132 | static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsigned char *alt, unsigned char *win);
+      |             ^~~~~~~~~~~~~~~~~~~~
+src/input.c:5:12: warning: ‘space_pressed’ defined but not used [-Wunused-variable]
+    5 | static int space_pressed = 0;
+      |            ^~~~~~~~~~~~~
+src/platform/platform.h:98:12: warning: ‘last_mouse_y’ defined but not used [-Wunused-variable]
+   98 | static int last_mouse_y = 0;
+      |            ^~~~~~~~~~~~
+src/platform/platform.h:97:12: warning: ‘last_mouse_x’ defined but not used [-Wunused-variable]
+   97 | static int last_mouse_x = 0;
+      |            ^~~~~~~~~~~~
+Compilation : src/files.c -> build/linux/obj_debug/files.o
+In file included from src/files.c:2:
+src/platform/platform.h:128:22: warning: ‘platformPushEvent’ declared ‘static’ but never defined [-Wunused-function]
+  128 | static unsigned char platformPushEvent(Event event);
+      |                      ^~~~~~~~~~~~~~~~~
+src/platform/platform.h:132:13: warning: ‘platformGetModifiers’ declared ‘static’ but never defined [-Wunused-function]
+  132 | static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsigned char *alt, unsigned char *win);
+      |             ^~~~~~~~~~~~~~~~~~~~
+src/platform/platform.h:98:12: warning: ‘last_mouse_y’ defined but not used [-Wunused-variable]
+   98 | static int last_mouse_y = 0;
+      |            ^~~~~~~~~~~~
+src/platform/platform.h:97:12: warning: ‘last_mouse_x’ defined but not used [-Wunused-variable]
+   97 | static int last_mouse_x = 0;
+      |            ^~~~~~~~~~~~
+Compilation : src/memory.c -> build/linux/obj_debug/memory.o
+In file included from src/memory.c:2:
+src/platform/platform.h:128:22: warning: ‘platformPushEvent’ declared ‘static’ but never defined [-Wunused-function]
+  128 | static unsigned char platformPushEvent(Event event);
+      |                      ^~~~~~~~~~~~~~~~~
+src/platform/platform.h:132:13: warning: ‘platformGetModifiers’ declared ‘static’ but never defined [-Wunused-function]
+  132 | static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsigned char *alt, unsigned char *win);
+      |             ^~~~~~~~~~~~~~~~~~~~
+src/platform/platform.h:98:12: warning: ‘last_mouse_y’ defined but not used [-Wunused-variable]
+   98 | static int last_mouse_y = 0;
+      |            ^~~~~~~~~~~~
+src/platform/platform.h:97:12: warning: ‘last_mouse_x’ defined but not used [-Wunused-variable]
+   97 | static int last_mouse_x = 0;
+      |            ^~~~~~~~~~~~
+Compilation : src/string.c -> build/linux/obj_debug/string.o
+Compilation : src/dateTime.c -> build/linux/obj_debug/dateTime.o
+src/dateTime.c: In function ‘createDateChain’:
+src/dateTime.c:32:12: warning: function returns address of local variable [-Wreturn-local-addr]
+   32 |     return date;
+      |            ^~~~
+src/dateTime.c: In function ‘createTimeChain’:
+src/dateTime.c:52:12: warning: function returns address of local variable [-Wreturn-local-addr]
+   52 |     return time;
+      |            ^~~~
+In file included from src/dateTime.c:2:
+src/platform/platform.h: At top level:
+src/platform/platform.h:128:22: warning: ‘platformPushEvent’ declared ‘static’ but never defined [-Wunused-function]
+  128 | static unsigned char platformPushEvent(Event event);
+      |                      ^~~~~~~~~~~~~~~~~
+src/platform/platform.h:132:13: warning: ‘platformGetModifiers’ declared ‘static’ but never defined [-Wunused-function]
+  132 | static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsigned char *alt, unsigned char *win);
+      |             ^~~~~~~~~~~~~~~~~~~~
+src/platform/platform.h:98:12: warning: ‘last_mouse_y’ defined but not used [-Wunused-variable]
+   98 | static int last_mouse_y = 0;
+      |            ^~~~~~~~~~~~
+src/platform/platform.h:97:12: warning: ‘last_mouse_x’ defined but not used [-Wunused-variable]
+   97 | static int last_mouse_x = 0;
+      |            ^~~~~~~~~~~~
+Compilation : src/fonction.c -> build/linux/obj_debug/fonction.o
+Compilation : src/path.c -> build/linux/obj_debug/path.o
+In file included from src/path.c:2:
+src/platform/platform.h:128:22: warning: ‘platformPushEvent’ declared ‘static’ but never defined [-Wunused-function]
+  128 | static unsigned char platformPushEvent(Event event);
+      |                      ^~~~~~~~~~~~~~~~~
+src/platform/platform.h:132:13: warning: ‘platformGetModifiers’ declared ‘static’ but never defined [-Wunused-function]
+  132 | static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsigned char *alt, unsigned char *win);
+      |             ^~~~~~~~~~~~~~~~~~~~
+src/platform/platform.h:98:12: warning: ‘last_mouse_y’ defined but not used [-Wunused-variable]
+   98 | static int last_mouse_y = 0;
+      |            ^~~~~~~~~~~~
+src/platform/platform.h:97:12: warning: ‘last_mouse_x’ defined but not used [-Wunused-variable]
+   97 | static int last_mouse_x = 0;
+      |            ^~~~~~~~~~~~
+Compilation : src/log/log.c -> build/linux/obj_debug/log.o
+Compilation : src/platform/platform_linux.c -> build/linux/obj_debug/platform_linux.o
+In file included from src/platform/platform_linux.c:14:
+src/platform/platform.h:132:13: warning: ‘platformGetModifiers’ declared ‘static’ but never defined [-Wunused-function]
+  132 | static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsigned char *alt, unsigned char *win);
+      |             ^~~~~~~~~~~~~~~~~~~~
+src/platform/platform_linux.c:30:22: warning: ‘running’ defined but not used [-Wunused-variable]
+   30 | static unsigned char running = 1;
+      |                      ^~~~~~~
+src/platform/platform.h:98:12: warning: ‘last_mouse_y’ defined but not used [-Wunused-variable]
+   98 | static int last_mouse_y = 0;
+      |            ^~~~~~~~~~~~
+src/platform/platform.h:97:12: warning: ‘last_mouse_x’ defined but not used [-Wunused-variable]
+   97 | static int last_mouse_x = 0;
+      |            ^~~~~~~~~~~~
+/usr/bin/ld: cannot open output file /debug/app: No such file or directory
+collect2: error: ld returned 1 exit status

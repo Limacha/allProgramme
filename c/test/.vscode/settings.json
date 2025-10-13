@@ -8,6 +8,10 @@
         "datetime.h": "c",
         "render.h": "c",
         "input.h": "c",
-        "logic.h": "c"
+        "logic.h": "c",
+        "syscall.h": "c",
+        "fcntl.h": "c",
+        "stat.h": "c",
+        "logmanager.h": "c"
     }
 }

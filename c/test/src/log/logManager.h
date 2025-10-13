@@ -1,3 +1,5 @@
+#ifndef logMangager_H
+#define logMangager_H
 
 /**
  * @brief set le chemin du fichier principal et fais un test
@@ -31,3 +33,4 @@ unsigned char addSizedContentToLog(char *data, unsigned long size);
  * @return la taille du chemin
  */
 unsigned short getLogPath(char *outPath);
+#endif

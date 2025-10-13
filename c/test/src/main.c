@@ -2,7 +2,8 @@
 #include "input.h"
 #include "render.h"
 #include "files.h"
-#include "log/log.h"
+#include "log/logManager.h"
+#include "memory.h"
 
 int main(void)
 {
@@ -15,11 +16,10 @@ int main(void)
     char *buffer = dirListToSingleBuffer(&racineContent, "\n-> ", 0x01);
     if (buffer)
     {
-        addToLog(buffer, 0x02); // utiliser le buffer
+        addContentToLog(buffer); // utiliser le buffer
         memoryFree(buffer);
         // libérer le buffer après utilisation
     }
-    addToLog("\n", 0x00);
 
     while (isRunning())
     {

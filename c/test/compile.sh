@@ -23,6 +23,7 @@ echo "Target OS : $TARGET_OS"
 echo "=============================="
 echo "2) Création des dossiers de build"
 echo "=============================="
+BUILD_DIR="build/$TARGET_OS"
 [ ! -d build ] && mkdir build
 [ ! -d build/$TARGET_OS ] && mkdir build/$TARGET_OS
 
@@ -40,12 +41,12 @@ OBJ_RELEASE_DIR="build/$TARGET_OS/obj_release"
 echo "=============================="
 echo "3) Définition des fichiers sources"
 echo "=============================="
-SOURCES="main.c logic.c render.c input.c files.c memory.c string.c log/log.c dateTime.c fonction.c path.c platform/platform.c"
+SOURCES="src/main.c src/logic.c src/render.c src/input.c src/files.c src/memory.c src/string.c src/dateTime.c src/fonction.c src/path.c src/log/log.c src/log/logManager.c src/platform/platform.c"
 
 # Fichier spécifique à la plateforme
 case "$TARGET_OS" in
-    windows) PLATFORM_SRC="platform/platform_win.c" ;;
-    linux) PLATFORM_SRC="platform/platform_linux.c" ;;
+    windows) PLATFORM_SRC="src/platform/platform_win.c" ;;
+    linux) PLATFORM_SRC="src/platform/platform_linux.c" ;;
     macos) PLATFORM_SRC="" ;;
     android) PLATFORM_SRC="" ;;
     *) PLATFORM_SRC="" ;;
@@ -61,15 +62,21 @@ if command -v gcc &> /dev/null; then
     echo "gcc détecté - Debug build"
     gcc --version
 
+    # Compilation des fichiers objets
     for src in $ALL_SOURCES; do
         obj="$OBJ_DEBUG_DIR/$(basename $src .c).o"
-        echo "compil $src"
+        echo "Compilation : $src -> $obj"
         gcc -c "$src" -o "$obj" -g -Wall -Wextra -Wpedantic
     done
 
-    echo "for fini"
-
-    gcc "$OBJ_DEBUG_DIR"/*.o -o build/$TARGET_OS/debug/app.exe -lgdi32 -luser32 -mwindows -Wall -Wextra -Wpedantic
+    # Linking
+    OUTPUT_DEBUG="$BUILD_DIR/debug/app"
+    if [[ "$TARGET_OS" == "windows" ]]; then
+        OUTPUT_DEBUG="$OUTPUT_DEBUG.exe"
+        gcc "$OBJ_DEBUG_DIR"/*.o -o "$OUTPUT_DEBUG" -lgdi32 -luser32 -mwindows
+    else
+        gcc "$OBJ_DEBUG_DIR"/*.o -o "$OUTPUT_DEBUG"
+    fi
 else
     echo "❌ Aucun compilateur GCC trouvé"
     exit 1
@@ -79,13 +86,19 @@ echo "=============================="
 echo "5) Compilation GCC - RELEASE"
 echo "=============================="
 
+# Compilation Release
 for src in $ALL_SOURCES; do
     obj="$OBJ_RELEASE_DIR/$(basename $src .c).o"
     gcc -c "$src" -o "$obj" -O2 -Wall -Wextra -Wpedantic
 done
 
-gcc "$OBJ_RELEASE_DIR"/*.o -o build/$TARGET_OS/release/app.exe -lgdi32 -luser32 -mwindows -Wall -Wextra -Wpedantic
-
+OUTPUT_RELEASE="$BUILD_DIR/release/app"
+if [[ "$TARGET_OS" == "windows" ]]; then
+    OUTPUT_RELEASE="$OUTPUT_RELEASE.exe"
+    gcc "$OBJ_RELEASE_DIR"/*.o -o "$OUTPUT_RELEASE" -lgdi32 -luser32 -mwindows
+else
+    gcc "$OBJ_RELEASE_DIR"/*.o -o "$OUTPUT_RELEASE"
+fi
 
 echo "=============================="
 echo "✅ Compilation terminée pour $TARGET_OS"
