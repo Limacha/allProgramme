@@ -1,6 +1,7 @@
 === Structure du projet ===
 
 ├F─ compile.sh
+├F─ debugCorrection.txt
 ├F─ test.c
 ├F─ vc140.pdb
 ├D─ src
@@ -26,7 +27,6 @@
 │   ├F─ string.c
 │   ├F─ string.h
 │   ├D─ log
-│   │   ├F─ log.aklog
 │   │   ├F─ log.c
 │   │   ├F─ log.h
 │   │   ├F─ logController.h

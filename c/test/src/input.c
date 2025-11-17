@@ -23,10 +23,10 @@ void processInput(void)
 int isSpacePressed(void)
 {
     int spacePress = platformIsSpacePressed();
-    if (spacePress)
+    /*if (spacePress)
     {
         addToFile("jacko.txt", "\nspace: ");
-    }
+    }*/
     return spacePress;
 }
 

@@ -597,7 +597,7 @@ void *platformMemoryAlloc(unsigned int size)
     return malloc(size); // renvoie un pointeur ou NULL si erreur
 }
 
-void platfromMemoryFree(void *ptr)
+void platformMemoryFree(void *ptr)
 {
     free(ptr); // libère le bloc
 }

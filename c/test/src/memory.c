@@ -8,5 +8,5 @@ void *memoryMalloc(unsigned int size)
 
 void memoryFree(void *ptr)
 {
-    platfromMemoryFree(ptr);
+    platformMemoryFree(ptr);
 }

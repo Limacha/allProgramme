@@ -133,7 +133,7 @@ static void platformGetModifiers(unsigned char *shift, unsigned char *ctrl, unsi
 
 // fonctions memoire
 void *platformMemoryAlloc(unsigned int size);
-void platfromMemoryFree(void *ptr);
+void platformMemoryFree(void *ptr);
 
 // fonctions date time
 void platformGetDate(unsigned short *year, unsigned short *month, unsigned short *day);

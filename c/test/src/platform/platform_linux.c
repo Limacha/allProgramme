@@ -12,8 +12,6 @@
 
 // === Dépendances du projet ===
 #include "platform.h"
-#include "../render.h"
-#include "../input.h"
 
 // =============================================================
 // === VARIABLES GLOBALES ======================================
@@ -136,11 +134,15 @@ void platformRenderFrame(unsigned int *pixels)
     if (!fb_ptr || !pixels)
         return;
 
-    for (unsigned int y = 0; y < height; y++)
+    // Limiter la taille pour ne pas dépasser le framebuffer
+    unsigned int renderWidth = width < 800 ? width : 800;
+    unsigned int renderHeight = height < 600 ? height : 600;
+
+    for (unsigned int y = 0; y < renderHeight; y++)
     {
         unsigned int *dst = (unsigned int *)((char *)fb_ptr + y * finfo.line_length);
-        unsigned int *src = pixels + y * width;
-        for (unsigned int x = 0; x < width; x++)
+        unsigned int *src = pixels + y * 800; // ton buffer logique est toujours 800x600
+        for (unsigned int x = 0; x < renderWidth; x++)
             dst[x] = src[x];
     }
 }
@@ -370,4 +372,52 @@ void platformGetTime(unsigned short *hour, unsigned short *minute, unsigned shor
         *minute = (t % 3600) / 60;
     if (second)
         *second = t % 60;
+}
+
+// a refaire
+int platformIsSpacePressed(void)
+{
+    // à adapter selon ta logique, par exemple :
+    // retourne vrai si la touche espace est pressée
+    return 0;
+}
+
+unsigned char platformIsRunning(void)
+{
+    // retourne l’état global du programme
+    extern unsigned char running;
+    return running;
+}
+
+void *platformMemoryAlloc(unsigned int size)
+{
+    if (size == 0)
+        return NULL;
+
+    void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
+                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+    if (ptr == MAP_FAILED)
+        return NULL;
+
+    return ptr;
+}
+
+void platformMemoryFree(void *ptr)
+{
+    if (ptr == NULL)
+        return;
+
+    // ⚠️ Pour libérer avec munmap(), on a besoin de connaître la taille.
+    // Ici, on ne la connaît pas, donc en version simple :
+    // on ne peut pas la libérer proprement sans tracking.
+    // Si tu veux un vrai free, il faut stocker la taille quelque part.
+
+    // Exemple si tu stockes la taille au début du bloc :
+    /*
+    size_t *realPtr = (size_t *)ptr - 1;
+    munmap(realPtr, *realPtr + sizeof(size_t));
+    */
+
+    // Sinon, tu peux laisser cette fonction vide ou ajouter un commentaire :
 }

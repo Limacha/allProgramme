@@ -16,8 +16,14 @@
     ],
     "excludeCode": {
       "folders": [],
-      "extensions": [],
-      "files": [],
+      "extensions": [
+        ".txt",
+        ".aklog"
+      ],
+      "files": [
+        "vc140.pdb",
+        "compile.sh"
+      ],
       "name": []
     }
   }

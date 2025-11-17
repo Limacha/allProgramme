@@ -76,6 +76,7 @@ if command -v gcc &> /dev/null; then
         gcc "$OBJ_DEBUG_DIR"/*.o -o "$OUTPUT_DEBUG" -lgdi32 -luser32 -mwindows
     else
         gcc "$OBJ_DEBUG_DIR"/*.o -o "$OUTPUT_DEBUG"
+        chmod +x "$OUTPUT_DEBUG"
     fi
 else
     echo "❌ Aucun compilateur GCC trouvé"
@@ -98,6 +99,7 @@ if [[ "$TARGET_OS" == "windows" ]]; then
     gcc "$OBJ_RELEASE_DIR"/*.o -o "$OUTPUT_RELEASE" -lgdi32 -luser32 -mwindows
 else
     gcc "$OBJ_RELEASE_DIR"/*.o -o "$OUTPUT_RELEASE"
+        chmod +x "$OUTPUT_RELEASE"
 fi
 
 echo "=============================="
