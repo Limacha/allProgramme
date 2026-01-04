@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "controller.h": "c",
+        "gui.h": "c"
+    }
+}

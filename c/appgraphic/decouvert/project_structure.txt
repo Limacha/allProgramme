@@ -1,0 +1,283 @@
+=== Structure du projet ===
+
+├F─ launchvsWithCl.bat
+├F─ main.c
+├D─ .vscode
+│   ├F─ settings.json
+├D─ gui
+│   ├F─ gui.h
+│   ├F─ waylandBackend.c
+│   ├F─ win32Backend.c
+
+
+///////////////////////////
+// launchvsWithCl.bat
+///////////////////////////
+@echo off
+REM === Charger l'environnement de compilation de Visual Studio ===
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+REM === Lancer Visual Studio Code dans le dossier courant ===
+code .
+
+
+///////////////////////////
+// main.c
+///////////////////////////
+#include "gui/gui.h"
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+// Redirection WinMain → main
+int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR cmd, int show)
+{
+    return main();
+}
+#endif
+
+int main(void)
+{
+#ifdef _WIN32
+    return gui_main_win32();
+#else
+    return gui_main_wayland();
+#endif
+}
+
+///////////////////////////
+// .vscode\settings.json
+///////////////////////////
+{
+    "files.associations": {
+        "gui.h": "c"
+    }
+}
+
+///////////////////////////
+// gui\gui.h
+///////////////////////////
+#ifndef GUI_H
+#define GUI_H
+
+/* Entrées principales selon le système */
+int gui_main_win32(void);
+int gui_main_wayland(void);
+
+#endif
+
+///////////////////////////
+// gui\waylandBackend.c
+///////////////////////////
+#ifndef _WIN32
+#include "gui.h"
+#include <wayland-client.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdio.h>
+
+static struct wl_display *display;
+static struct wl_compositor *compositor;
+static struct wl_registry *registry;
+static struct wl_shm *shm;
+static struct wl_surface *surface;
+static struct wl_shm_pool *pool;
+static struct wl_buffer *buffer;
+
+static int width = 800, height = 480;
+static void *data;
+static int fd;
+static size_t size;
+
+static int create_shm_file(size_t size)
+{
+    char tmpl[] = "/tmp/minigui-XXXXXX";
+    int fd = mkstemp(tmpl);
+    unlink(tmpl);
+    ftruncate(fd, size);
+    return fd;
+}
+
+static void registry_add(void *data, struct wl_registry *reg, uint32_t id, const char *iface, uint32_t ver)
+{
+    if (!strcmp(iface, "wl_compositor"))
+        compositor = wl_registry_bind(reg, id, &wl_compositor_interface, 1);
+    else if (!strcmp(iface, "wl_shm"))
+        shm = wl_registry_bind(reg, id, &wl_shm_interface, 1);
+}
+
+static const struct wl_registry_listener registry_listener = {
+    .global = registry_add,
+    .global_remove = NULL};
+
+static void render()
+{
+    uint32_t *px = data;
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+            px[y * width + x] = 0xFFCCCCCC;
+}
+
+int gui_main_wayland(void)
+{
+    display = wl_display_connect(NULL);
+    if (!display)
+        return 1;
+
+    registry = wl_display_get_registry(display);
+    wl_registry_add_listener(registry, &registry_listener, NULL);
+    wl_display_roundtrip(display);
+
+    surface = wl_compositor_create_surface(compositor);
+
+    int stride = width * 4;
+    size = stride * height;
+    fd = create_shm_file(size);
+    data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+    pool = wl_shm_create_pool(shm, fd, size);
+    buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_XRGB8888);
+
+    render();
+
+    wl_surface_attach(surface, buffer, 0, 0);
+    wl_surface_commit(surface);
+
+    while (wl_display_dispatch(display) != -1)
+    {
+    }
+
+    return 0;
+}
+#endif
+
+///////////////////////////
+// gui\win32Backend.c
+///////////////////////////
+#ifdef _WIN32
+#include <windows.h>
+#include "gui.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define APP_TITLE "minigui - Win32"
+
+typedef struct
+{
+    int width, height;
+    HBITMAP hbmp;
+    void *pixels;
+} AppState;
+
+static AppState g_app = {800, 480, NULL, NULL};
+
+static BOOL create_offscreen(AppState *s)
+{
+    BITMAPINFO bmi = {0};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = s->width;
+    bmi.bmiHeader.biHeight = -s->height;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    HDC hdc = GetDC(NULL);
+    void *bits = NULL;
+    HBITMAP hbmp = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
+    ReleaseDC(NULL, hdc);
+
+    if (!hbmp || !bits)
+        return FALSE;
+
+    s->hbmp = hbmp;
+    s->pixels = bits;
+    return TRUE;
+}
+
+static void render(AppState *s)
+{
+    unsigned int *px = (unsigned int *)s->pixels;
+    int w = s->width, h = s->height;
+
+    for (int y = 0; y < h; ++y)
+        for (int x = 0; x < w; ++x)
+            px[y * w + x] = 0xFFDCDCDC;
+
+    int rx0 = w / 8, ry0 = h / 4, rx1 = w * 7 / 8, ry1 = h * 3 / 4;
+    for (int y = ry0; y < ry1; ++y)
+        for (int x = rx0; x < rx1; ++x)
+            px[y * w + x] = 0xFF0078D7;
+}
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+    case WM_SIZE:
+    {
+        RECT r;
+        GetClientRect(hwnd, &r);
+        g_app.width = r.right - r.left;
+        g_app.height = r.bottom - r.top;
+        if (g_app.hbmp)
+            DeleteObject(g_app.hbmp);
+        create_offscreen(&g_app);
+        return 0;
+    }
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        render(&g_app);
+
+        HDC mem = CreateCompatibleDC(hdc);
+        HBITMAP old = (HBITMAP)SelectObject(mem, g_app.hbmp);
+        BitBlt(hdc, 0, 0, g_app.width, g_app.height, mem, 0, 0, SRCCOPY);
+        SelectObject(mem, old);
+        DeleteDC(mem);
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+int gui_main_win32(void)
+{
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+
+    WNDCLASSA wc = {0};
+    wc.lpfnWndProc = WndProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = "minigui_class";
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    RegisterClassA(&wc);
+
+    HWND hwnd = CreateWindowA("minigui_class", APP_TITLE,
+                              WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                              CW_USEDEFAULT, CW_USEDEFAULT,
+                              g_app.width, g_app.height,
+                              NULL, NULL, hInstance, NULL);
+
+    if (!hwnd)
+        return 1;
+    create_offscreen(&g_app);
+
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    return 0;
+}
+#endif

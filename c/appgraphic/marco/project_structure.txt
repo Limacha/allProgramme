@@ -1,0 +1,388 @@
+=== Structure du projet ===
+
+├F─ launchvsWithCl.bat
+├F─ t.txt
+├D─ .vscode
+│   ├F─ settings.json
+├D─ include
+│   ├F─ controller.h
+│   ├F─ gui.h
+│   ├F─ input.h
+│   ├F─ platform.h
+├D─ src
+│   ├F─ controller_windows.c
+│   ├F─ gui_windows.c
+│   ├F─ input_windows.c
+│   ├F─ main.c
+
+
+///////////////////////////
+// launchvsWithCl.bat
+///////////////////////////
+@echo off
+REM === Charger l'environnement de compilation de Visual Studio ===
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+REM === Lancer Visual Studio Code dans le dossier courant ===
+code .
+
+
+///////////////////////////
+// t.txt
+///////////////////////////
+cl /Fe:auto_input.exe src\main.c src\controller_windows.c src\input_windows.c src\gui_windows.c user32.lib gdi32.lib  /I. /link /SUBSYSTEM:WINDOWS
+
+///////////////////////////
+// .vscode\settings.json
+///////////////////////////
+{
+    "files.associations": {
+        "controller.h": "c",
+        "gui.h": "c"
+    }
+}
+
+///////////////////////////
+// include\controller.h
+///////////////////////////
+#ifndef CONTROLLER_H
+#define CONTROLLER_H
+
+// Retourne si le système est en fonctionnement
+char controller_is_running();
+
+// Fonction appelée par GUI ou F6
+void controller_toggle();
+
+// Démarre la boucle du contrôleur (pour la version console si besoin)
+void controller_start();
+
+char controller_nbF6();
+
+#endif
+
+
+///////////////////////////
+// include\gui.h
+///////////////////////////
+#ifndef GUI_H
+#define GUI_H
+
+void gui_start();
+void gui_refresh();
+
+#endif
+
+
+///////////////////////////
+// include\input.h
+///////////////////////////
+#ifndef INPUT_H
+#define INPUT_H
+
+typedef enum
+{
+    INPUT_KEY,
+    INPUT_MOUSE_LEFT,
+    INPUT_MOUSE_RIGHT
+} InputType;
+
+// Déclenche un "clic" ou une touche rapidement
+void input_click(InputType type);
+
+// Maintenir une touche / bouton
+void input_press(InputType type);
+void input_release(InputType type);
+
+// Attendre en millisecondes
+void input_sleep(unsigned int ms);
+
+#endif
+
+
+///////////////////////////
+// include\platform.h
+///////////////////////////
+#ifndef PLATFORM_H
+#define PLATFORM_H
+
+#if defined(_WIN32) || defined(_WIN64)
+#define OS_WINDOWS
+#else
+#define OS_LINUX
+#endif
+
+#endif
+
+
+///////////////////////////
+// src\controller_windows.c
+///////////////////////////
+#include "../include/input.h"
+#include "../include/controller.h"
+#include "../include/gui.h"
+
+#include <windows.h>
+
+static char running = 0;
+static unsigned int interval = 200;
+static char nbF6 = 0;
+
+// ========== ACTION PRINCIPALE ==========
+static void run_loop()
+{
+    while (running)
+    {
+        input_click(INPUT_MOUSE_LEFT);
+        input_sleep(interval);
+    }
+}
+
+// ========== ACCÈS AU STATE ==========
+char controller_is_running()
+{
+    return running;
+}
+
+char controller_nbF6()
+{
+    return nbF6;
+}
+
+// ========== TOGGLE COMMUN (gui & raccourcis) ==========
+void controller_toggle()
+{
+    running = !running;
+
+    gui_refresh();
+    if (running)
+        run_loop(); // Bloquant dans ce thread → GUI utilise un thread séparé
+}
+
+// ========== VERSION WINDOWS (écoute F6) ==========
+DWORD WINAPI key_listener(LPVOID lp)
+{
+    while (1)
+    {
+        if (GetAsyncKeyState(VK_F6) & 1)
+        {
+            nbF6++;
+            controller_toggle(); // EXACTEMENT comme cliquer sur le bouton
+        }
+        input_sleep(50);
+    }
+    return 0;
+}
+
+void controller_start()
+{
+    CreateThread(NULL, 0, key_listener, NULL, 0, NULL);
+}
+
+///////////////////////////
+// src\gui_windows.c
+///////////////////////////
+#include "../include/gui.h"
+#include "../include/controller.h"
+
+#include <windows.h>
+
+// Variables globales GUI
+static unsigned int interval = 200;
+static HWND hwndButton, hwndState, hwndClickF6;
+
+// =====================================================================
+// REFRESH AFFICHAGE (appelable de n'importe où)
+// =====================================================================
+void gui_refresh()
+{
+    if (hwndButton)
+        SetWindowText(hwndButton, controller_is_running() ? "Stop" : "Start");
+
+    if (hwndState)
+        SetWindowText(hwndState,
+                      controller_is_running() ? "Running" : "Stopped");
+
+    if (hwndClickF6)
+    {
+        char buffer[64];
+        wsprintf(buffer, "F6 : %u", controller_nbF6());
+        SetWindowText(hwndClickF6,
+                      buffer);
+    }
+}
+
+// =====================================================================
+// Thread lancé quand on clique sur Start
+// =====================================================================
+DWORD WINAPI gui_run_thread(LPVOID lp)
+{
+    controller_toggle(); // lance ou stoppe la boucle
+    return 0;
+}
+
+// ========== CALLBACK WINDOWS ==========
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM w, LPARAM l)
+{
+    switch (msg)
+    {
+    case WM_CREATE:
+        hwndButton = CreateWindow("BUTTON", "Start",
+                                  WS_VISIBLE | WS_CHILD,
+                                  20, 20, 100, 30,
+                                  hwnd, (HMENU)1, NULL, NULL);
+
+        hwndState = CreateWindow("STATIC", "Stopped",
+                                 WS_VISIBLE | WS_CHILD,
+                                 0, 0, 150, 20,
+                                 hwnd, NULL, NULL, NULL);
+
+        hwndClickF6 = CreateWindow("STATIC", "F6: 0",
+                                   WS_VISIBLE | WS_CHILD,
+                                   20, 50, 150, 20,
+                                   hwnd, NULL, NULL, NULL);
+        break;
+
+    case WM_COMMAND:
+        if (LOWORD(w) == 1)
+        {
+            // Thread pour éviter de bloquer la GUI
+            CreateThread(NULL, 0, gui_run_thread, NULL, 0, NULL);
+        }
+        break;
+
+    case WM_TIMER:
+        gui_refresh();
+        break;
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+
+    default:
+        return DefWindowProc(hwnd, msg, w, l);
+    }
+    return 0;
+}
+
+// ========== LANCEMENT DE LA GUI ==========
+void gui_start()
+{
+    WNDCLASS wc = {0};
+    wc.lpfnWndProc = WndProc;
+    wc.lpszClassName = "AutoInput";
+    RegisterClass(&wc);
+
+    HWND hwnd = CreateWindow("AutoInput", "Auto Input Tool",
+                             WS_OVERLAPPEDWINDOW,
+                             CW_USEDEFAULT, CW_USEDEFAULT, 250, 150,
+                             NULL, NULL, NULL, NULL);
+
+    ShowWindow(hwnd, SW_SHOW);
+
+    // timer pour mettre à jour l’état toutes les 200 ms
+    SetTimer(hwnd, 1, 200, NULL);
+
+    MSG msg;
+    while (GetMessage(&msg, 0, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+}
+
+///////////////////////////
+// src\input_windows.c
+///////////////////////////
+#include <windows.h>
+#include "../include/input.h"
+
+// Envoie une touche
+static void send_key(WORD vk, BOOL down)
+{
+    INPUT in = {0};
+    in.type = INPUT_KEYBOARD;
+    in.ki.wVk = vk;
+    in.ki.dwFlags = down ? 0 : KEYEVENTF_KEYUP;
+    SendInput(1, &in, sizeof(INPUT));
+}
+
+// Envoie un clic souris
+static void send_mouse(DWORD flag)
+{
+    INPUT in = {0};
+    in.type = INPUT_MOUSE;
+    in.mi.dwFlags = flag;
+    SendInput(1, &in, sizeof(INPUT));
+}
+
+void input_click(InputType t)
+{
+    if (t == INPUT_KEY)
+    {
+        send_key('A', TRUE);
+        send_key('A', FALSE);
+    }
+    else if (t == INPUT_MOUSE_LEFT)
+    {
+        send_mouse(MOUSEEVENTF_LEFTDOWN);
+        send_mouse(MOUSEEVENTF_LEFTUP);
+    }
+    else if (t == INPUT_MOUSE_RIGHT)
+    {
+        send_mouse(MOUSEEVENTF_RIGHTDOWN);
+        send_mouse(MOUSEEVENTF_RIGHTUP);
+    }
+}
+
+void input_press(InputType t)
+{
+    if (t == INPUT_KEY)
+        send_key('A', TRUE);
+    else if (t == INPUT_MOUSE_LEFT)
+        send_mouse(MOUSEEVENTF_LEFTDOWN);
+    else if (t == INPUT_MOUSE_RIGHT)
+        send_mouse(MOUSEEVENTF_RIGHTDOWN);
+}
+
+void input_release(InputType t)
+{
+    if (t == INPUT_KEY)
+        send_key('A', FALSE);
+    else if (t == INPUT_MOUSE_LEFT)
+        send_mouse(MOUSEEVENTF_LEFTUP);
+    else if (t == INPUT_MOUSE_RIGHT)
+        send_mouse(MOUSEEVENTF_RIGHTUP);
+}
+
+void input_sleep(unsigned int ms)
+{
+    Sleep(ms);
+}
+
+
+///////////////////////////
+// src\main.c
+///////////////////////////
+#include "../include/platform.h"
+#include "../include/controller.h"
+#include "../include/gui.h"
+
+#ifdef OS_WINDOWS
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+// Redirection WinMain → main
+int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR cmd, int show)
+{
+    return main();
+}
+#endif
+
+int main()
+{
+    controller_start();
+    gui_start();
+    return 0;
+}
+

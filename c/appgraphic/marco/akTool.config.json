@@ -1,0 +1,15 @@
+{
+  "StructureConfig": {
+    "excludeFolders": [
+      "build"
+    ],
+    "excludeExtensions": [
+      ".ico"
+    ],
+    "excludeFiles": [
+      "project_structure.txt",
+      "akTool.config.json"
+    ],
+    "excludeName": []
+  }
+}

@@ -1,0 +1,1 @@
+cl /Fe:build\exe\autoInput.exe src\main.c src\controller_windows.c src\input_windows.c src\gui_windows.c resource\resources.res /Fo"build\obj\\" /I. user32.lib gdi32.lib /link /SUBSYSTEM:WINDOWS

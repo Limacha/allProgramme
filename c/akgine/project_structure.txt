@@ -1,0 +1,34 @@
+=== Structure du projet ===
+
+├F─ compile.sh
+├F─ launchvs.bat
+├D─ .vscode
+├D─ build
+├D─ hex
+├D─ include
+│   ├D─ engine
+│   │   ├F─ engine.h
+│   │   ├F─ input.h
+│   │   ├F─ memory.h
+│   │   ├F─ render.h
+│   │   ├F─ window.h
+│   ├D─ platform
+│   │   ├F─ platform.h
+│   │   ├F─ platform_input.h
+│   │   ├F─ platform_memory.h
+│   │   ├F─ platform_window.h
+├D─ src
+│   ├F─ main.c
+│   ├D─ core
+│   │   ├F─ engine.c
+│   │   ├F─ input.c
+│   │   ├F─ memory.c
+│   │   ├F─ render.c
+│   │   ├F─ window.c
+│   ├D─ platform
+│   │   ├D─ win32
+│   │   │   ├F─ win32_render.c
+│   │   │   ├F─ win32_window.c
+│   │   ├D─ x11
+│   │   │   ├F─ x11_window.c
+
