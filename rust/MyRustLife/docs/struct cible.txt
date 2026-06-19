@@ -1,0 +1,42 @@
+├─ docs/                          # Nettoyage de la racine
+│   ├─ UML.drawio
+│   ├─ project_structure.txt
+│   └─ build.txt
+├─ assets/
+│   └─ icon/
+│       ├─ home_icon.png
+│       └─ todo_icon.png
+├─ scripts/
+│   ├─ build_android.sh           # snake_case appliqué
+│   └─ build_windows.sh
+└─ src/
+    ├─ main.rs
+    ├─ lib.rs
+    │
+    ├─ core/                      # INFRASTRUCTURE PARTAGÉE
+    │   ├─ mod.rs
+    │   ├─ consts.rs              # Constantes globales
+    │   └─ state.rs               # État global (ex: sharedState.rs)
+    │
+    ├─ app/                       # LE "SHELL" (L'orchestrateur de l'application)
+    │   ├─ mod.rs
+    │   ├─ app.rs                 # Initialisation de l'application
+    │   ├─ main_activity.rs       # Activité principale
+    │   └─ debug_activity.rs      # Écran de debug
+    │
+    ├─ home/                      # FEATURE: Écran d'accueil principal
+    │   ├─ mod.rs
+    │   └─ view.rs                # L'UI de la page d'accueil (ex: pages/home.rs)
+    │
+    ├─ todo/                      # FEATURE: Module Todo (Découpage interne)
+    │   ├─ mod.rs
+    │   ├─ model.rs               # Données pure (anciennement task.rs)
+    │   ├─ view.rs                # Interface graphique (anciennement home.rs)
+    │   └─ controller.rs          # Logique & Événements (anciennement activity.rs)
+    │
+    └─ watch_list/                # FEATURE: Module WatchList (Découpage interne)
+        ├─ mod.rs
+        ├─ model.rs               # Données pure (anciennement anime.rs)
+        ├─ view.rs                # Interface graphique (anciennement home.rs)
+        ├─ controller.rs          # Gestion des clics/flux (anciennement activity.rs)
+        └─ scanner.rs             # Logique métier spécifique (anciennement scan.rs)

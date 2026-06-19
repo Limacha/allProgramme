@@ -1,0 +1,16 @@
+[build]
+# Rustup gère les toolchains
+rustup = true
+
+[env]
+# ANDROID_HOME = "/home/bob/Android/Sdk"
+# ANDROID_NDK_HOME = "/home/bob/Applications/NDK/android-ndk-r27d-linux/android-ndk-r27d"
+ANDROID_HOME = "D:\\android"
+ANDROID_NDK_HOME = "D:\\android\\android-ndk-r27d"
+
+[target.aarch64-linux-android]
+# linker = "/home/bob/Applications/NDK/android-ndk-r27d-linux/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android35-clang"
+linker = "D:\\android\\android-ndk-r27d\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\aarch64-linux-android35-clang"
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

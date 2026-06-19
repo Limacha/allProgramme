@@ -1,0 +1,93 @@
+=== Structure du projet ===
+
+├F─ .gitignore
+├F─ akTool.config.json
+├F─ Cargo.lock
+├F─ Cargo.toml
+├F─ project_structure.txt
+├D─ .cargo
+│   ├F─ config.toml
+├D─ .git
+│   ├F─ config
+│   ├F─ description
+│   ├F─ HEAD
+│   ├D─ hooks
+│   │   ├F─ README.sample
+│   ├D─ info
+│   │   ├F─ exclude
+│   ├D─ objects
+│   │   ├D─ info
+│   │   ├D─ pack
+│   ├D─ refs
+│   │   ├D─ heads
+│   │   ├D─ tags
+├D─ assets
+│   ├D─ android
+│   │   ├D─ mipmap-hdpi
+│   │   │   ├F─ ic_launcher.png
+│   │   │   ├F─ ic_launcher_foreground.png
+│   │   │   ├F─ ic_launcher_round.png
+│   │   ├D─ mipmap-ldpi
+│   │   │   ├F─ ic_launcher.png
+│   │   │   ├F─ ic_launcher_foreground.png
+│   │   │   ├F─ ic_launcher_round.png
+│   │   ├D─ mipmap-mdpi
+│   │   │   ├F─ ic_launcher.png
+│   │   │   ├F─ ic_launcher_foreground.png
+│   │   │   ├F─ ic_launcher_round.png
+│   │   ├D─ mipmap-xhdpi
+│   │   │   ├F─ ic_launcher.png
+│   │   │   ├F─ ic_launcher_foreground.png
+│   │   │   ├F─ ic_launcher_round.png
+│   │   ├D─ mipmap-xxhdpi
+│   │   │   ├F─ ic_launcher.png
+│   │   │   ├F─ ic_launcher_foreground.png
+│   │   │   ├F─ ic_launcher_round.png
+│   │   ├D─ mipmap-xxxhdpi
+│   │   │   ├F─ ic_launcher.png
+│   │   │   ├F─ ic_launcher_foreground.png
+│   │   │   ├F─ ic_launcher_round.png
+│   ├D─ icon
+│   │   ├F─ home_icon.png
+│   │   ├F─ icon.png
+│   │   ├F─ todo_icon.png
+├D─ docs
+│   ├F─ .$UML.drawio.bkp
+│   ├F─ build.txt
+│   ├F─ ia
+│   ├F─ MyRustLife_architecture.drawio
+│   ├F─ struct cible.txt
+├D─ scripts
+│   ├F─ buildw_android.sh
+│   ├F─ buildw_windows.sh
+├D─ src
+│   ├F─ lib.rs
+│   ├F─ main.rs
+│   ├D─ app
+│   │   ├F─ app.rs
+│   │   ├F─ debugActivity.rs
+│   │   ├F─ mainActivity.rs
+│   │   ├F─ mod.rs
+│   │   ├F─ releaseActivity.rs
+│   │   ├F─ stateManager.rs
+│   ├D─ core
+│   │   ├F─ consts.rs
+│   │   ├F─ mod.rs
+│   │   ├F─ router.rs
+│   │   ├F─ state.rs
+│   ├D─ home
+│   │   ├F─ activity.rs
+│   │   ├F─ home.rs
+│   │   ├F─ mod.rs
+│   ├D─ todo
+│   │   ├F─ activity.rs
+│   │   ├F─ home.rs
+│   │   ├F─ mod.rs
+│   │   ├F─ task.rs
+│   ├D─ watchList
+│   │   ├F─ activity.rs
+│   │   ├F─ anime.rs
+│   │   ├F─ home.rs
+│   │   ├F─ mod.rs
+│   │   ├F─ scan.rs
+
