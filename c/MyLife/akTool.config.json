@@ -1,0 +1,38 @@
+{
+  "StructureConfig": {
+    "excludeFolders": [
+      "other",
+      "src copy",
+      "build",
+      ".git"
+    ],
+    "excludeExtensions": [],
+    "excludeFiles": [
+      "project_structure.txt",
+      "akTool.config.json",
+      "project_code.txt",
+      "draw.excalidraw"
+    ],
+    "excludeName": [],
+    "excludeCode": {
+      "folders": [
+        "build",
+        "build/android",
+        "build/android/apk_staging",
+        "build/linux",
+        "build/windows",
+        "libs/android_arm64",
+        "libs/linux",
+        "libs/windows"
+      ],
+      "extensions": [],
+      "files": [
+        "README.md",
+        "project_structure.txt",
+        "akTool.config.json",
+        "project_code.txt"
+      ],
+      "name": []
+    }
+  }
+}

@@ -1,0 +1,16 @@
+#build linux
+sudo pat install gcc
+sudo apt install libgl-dev libx11-dev
+
+#build windows
+x86_64-w64-mingw32-cross
+
+#build android
+sudo apt install zip
+#java
+sudo apt install default-jdk
+#or
+sudo apt install openjdk-17-jdk
+#NDK
+
+#SDK

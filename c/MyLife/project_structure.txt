@@ -1,0 +1,45 @@
+=== Structure du projet ===
+
+├F─ README.md
+├F─ adbIntall.sh
+├F─ needLinux.txt
+├D─ .vscode
+│   ├F─ launch.json
+│   ├F─ tasks.json
+├D─ libs
+│   ├D─ android_arm64
+│   │   ├F─ libraylib.a
+│   │   ├F─ libraylib_wrapped.a
+│   ├D─ include
+│   │   ├F─ raylib.h
+│   ├D─ linux
+│   │   ├F─ libraylib.a
+│   │   ├F─ libraylib_wrapped.a
+│   ├D─ windows
+│   │   ├F─ libraylib.a
+│   │   ├F─ libraylib_wrapped.a
+├D─ src
+│   ├F─ fortify_stub.c
+│   ├F─ main.c
+│   ├D─ app
+│   │   ├F─ app.c
+│   │   ├F─ app.h
+│   │   ├F─ appConst.h
+│   │   ├F─ appStruct.h
+│   │   ├F─ appc.c
+│   ├D─ engine
+│   │   ├F─ engine.c
+│   │   ├F─ engine.h
+│   │   ├F─ engineConst.h
+│   │   ├F─ engineStruct.h
+│   │   ├F─ raylib_adapter.h
+│   │   ├D─ converter
+│   │   │   ├F─ converter.c
+│   │   │   ├F─ converter.h
+│   │   ├D─ platform
+│   │   │   ├F─ platform.h
+│   │   │   ├F─ platform_android.c
+│   │   │   ├F─ platform_default.c
+│   │   │   ├F─ platform_linux.c
+│   │   │   ├F─ platform_windows.c
+

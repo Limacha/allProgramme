@@ -1,0 +1,1813 @@
+///////////////////////////
+// Cargo.toml
+///////////////////////////
+[package]
+name = "akgine"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "akgine"
+crate-type = ["cdylib", "rlib"] # required for Android .so
+
+[lints.rust]
+unused_parens = "allow"
+
+[dependencies]
+egui_extras = { version = "0.34.1", features = ["image"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.40", features = ["bundled"] }
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+eframe = { version = "0.34.1", default-features = false, features = [
+    "default_fonts",
+    "glow",
+    "persistence",
+] }
+
+# eframe SANS les features desktop/accesskit quand on build Android
+[target.'cfg(target_os = "android")'.dependencies]
+eframe = { version = "0.34.1", default-features = false, features = [
+    "default_fonts",
+    "android-native-activity",
+    "glow",
+    "persistence",
+] }
+android-activity = { version = "0.6", features = ["native-activity"] }
+
+
+///////////////////////////
+// project_code.txt
+///////////////////////////
+
+
+///////////////////////////
+// project_structure.txt
+///////////////////////////
+
+
+///////////////////////////
+// src\lib.rs
+///////////////////////////
+#![allow(non_snake_case)]
+use eframe::egui;
+pub mod database;
+pub mod navigation;
+pub mod widgets;
+
+pub fn test(ui: &mut egui::Ui) {
+    ui.label("testou");
+}
+
+
+///////////////////////////
+// src\database\column.rs
+///////////////////////////
+// db_lib/src/column.rs
+//
+// Column and IndexDef describe the schema that DbRecord::columns() and
+// DbRecord::indexes() return. The library uses them to generate
+// CREATE TABLE and CREATE INDEX statements automatically.
+
+// ── ColType ───────────────────────────────────────────────────────────────────
+
+/// The SQLite storage type for a column.
+///
+/// Note: there is no Boolean type — use Integer and call as_bool() when reading.
+/// SQLite stores 0 = false, everything else = true.
+#[derive(Clone, Debug)]
+pub enum ColType {
+    /// INTEGER — i64, bool (0/1), Unix timestamps.
+    Integer,
+    /// REAL — f64, f32.
+    Real,
+    /// TEXT — String, enum variants stored as strings.
+    Text,
+}
+
+impl ColType {
+    pub(crate) fn as_sql(&self) -> &'static str {
+        match self {
+            ColType::Integer => "INTEGER",
+            ColType::Real => "REAL",
+            ColType::Text => "TEXT",
+        }
+    }
+}
+
+// ── Column ────────────────────────────────────────────────────────────────────
+
+/// Definition of one column in a table (excluding the auto-managed `id` column).
+///
+/// The library always adds `id INTEGER PRIMARY KEY AUTOINCREMENT` as the first
+/// column; you do not include it in `DbRecord::columns()`.
+///
+/// # Example
+/// ```rust
+/// fn columns() -> Vec<Column> {
+///     vec![
+///         Column::new("user_id",    ColType::Integer).not_null(),
+///         Column::new("title",      ColType::Text).not_null(),
+///         Column::new("done",       ColType::Integer).not_null().default("0"),
+///         Column::new("deleted",    ColType::Integer).not_null().default("0"),
+///         Column::new("created_at", ColType::Integer).not_null().default("(unixepoch())"),
+///         Column::new("updated_at", ColType::Integer).not_null().default("(unixepoch())"),
+///     ]
+/// }
+/// ```
+#[derive(Clone, Debug)]
+pub struct Column {
+    /// Column name — must match /^[A-Za-z][A-Za-z0-9_]*$/.
+    /// Use the same name in get("col_name") inside from_values().
+    pub name: &'static str,
+
+    /// The SQLite storage type.
+    pub col_type: ColType,
+
+    /// If true, a NOT NULL constraint is added.
+    pub not_null: bool,
+
+    /// Optional DEFAULT expression, written verbatim into the CREATE TABLE SQL.
+    /// Examples: "0", "'pending'", "(unixepoch())"
+    pub default: Option<&'static str>,
+}
+
+impl Column {
+    /// Start building a column definition.
+    pub const fn new(name: &'static str, col_type: ColType) -> Self {
+        Self {
+            name,
+            col_type,
+            not_null: false,
+            default: None,
+        }
+    }
+
+    /// Add NOT NULL constraint.
+    pub const fn not_null(mut self) -> Self {
+        self.not_null = true;
+        self
+    }
+
+    /// Add a DEFAULT expression.
+    ///
+    /// The value is written verbatim into SQL, so include quotes if needed:
+    /// ```rust
+    /// Column::new("status", ColType::Text).default("'PlanToWatch'")
+    /// ```
+    pub const fn default(mut self, expr: &'static str) -> Self {
+        self.default = Some(expr);
+        self
+    }
+
+    /// Generate the column fragment for CREATE TABLE (without trailing comma).
+    pub(crate) fn to_sql_fragment(&self) -> String {
+        let mut sql = format!(
+            r#""{}" {}"#,
+            self.name.replace('"', r#""""#),
+            self.col_type.as_sql()
+        );
+        if self.not_null {
+            sql.push_str(" NOT NULL");
+        }
+        if let Some(def) = self.default {
+            sql.push_str(&format!(" DEFAULT {def}"));
+        }
+        sql
+    }
+}
+
+// ── IndexDef ──────────────────────────────────────────────────────────────────
+
+/// Definition of a CREATE INDEX statement.
+///
+/// Return one or more of these from `DbRecord::indexes()` to have the library
+/// create the indexes automatically alongside the table.
+///
+/// # Example
+/// ```rust
+/// fn indexes() -> Vec<IndexDef> {
+///     vec![
+///         // WHERE user_id = ? AND deleted = 0 ORDER BY updated_at DESC
+///         IndexDef::new(&["user_id", "deleted", "updated_at"]),
+///     ]
+/// }
+/// ```
+#[derive(Clone, Debug)]
+pub struct IndexDef {
+    /// Column names included in the index, in order.
+    pub columns: &'static [&'static str],
+    /// If true, creates a UNIQUE INDEX instead of a regular one.
+    pub unique: bool,
+}
+
+impl IndexDef {
+    pub const fn new(columns: &'static [&'static str]) -> Self {
+        Self {
+            columns,
+            unique: false,
+        }
+    }
+
+    pub const fn unique(mut self) -> Self {
+        self.unique = true;
+        self
+    }
+}
+
+
+///////////////////////////
+// src\database\database.rs
+///////////////////////////
+// db_lib/src/database.rs
+//
+// Db is the single connection handle used by the whole application.
+// It is Arc<Mutex<Connection>> so it is cheap to clone and safe to share.
+//
+// Responsibilities of THIS file:
+//   - Opening the SQLite file and setting connection-level PRAGMAs.
+//   - ensure_table<T>(): generating and running CREATE TABLE / CREATE INDEX.
+//   - Providing the internal lock() accessor to Repository and QueryBuilder.
+//
+// What does NOT belong here:
+//   - CRUD logic  → repository.rs
+//   - Query building → query.rs
+//   - Application-specific paths → akTool/src/db/mod.rs
+
+use std::path::Path;
+use std::sync::{Arc, Mutex, MutexGuard};
+
+use rusqlite::Connection;
+
+use crate::database::column::Column;
+use crate::database::error::DbError;
+use crate::database::record::DbRecord;
+
+// ── Db ────────────────────────────────────────────────────────────────────────
+
+/// A cheaply cloneable handle to one SQLite database connection.
+///
+/// Cloning `Db` is free — it only increments an Arc reference counter.
+/// Store one instance in `AppState`. Pass clones to `Repository<T>`.
+///
+/// Thread safety: the Mutex ensures only one query runs at a time.
+/// This is appropriate for a single-threaded egui application.
+#[derive(Clone)]
+pub struct Db {
+    inner: Arc<Mutex<Connection>>,
+}
+
+impl Db {
+    // ── Constructors ──────────────────────────────────────────────────────────
+
+    /// Open or create the SQLite file at `path`.
+    ///
+    /// Creates parent directories automatically.
+    /// Sets WAL journal mode and enables foreign-key constraints.
+    pub fn open(path: &Path) -> Result<Self, DbError> {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).ok(); // best-effort
+        }
+        let conn = Connection::open(path)?;
+        configure(&conn)?;
+        Ok(Self {
+            inner: Arc::new(Mutex::new(conn)),
+        })
+    }
+
+    /// Open an in-memory database. Useful for unit tests.
+    ///
+    /// The database is destroyed when this handle (and all its clones) drop.
+    pub fn in_memory() -> Result<Self, DbError> {
+        let conn = Connection::open_in_memory()?;
+        configure(&conn)?;
+        Ok(Self {
+            inner: Arc::new(Mutex::new(conn)),
+        })
+    }
+
+    // ── Convenience factory ───────────────────────────────────────────────────
+
+    /// Create a `Repository<T>`, ensuring the table and indexes exist.
+    ///
+    /// This is the main entry-point from application code:
+    /// ```rust
+    /// let tasks: Repository<Task> = db.repository()?;
+    /// ```
+    pub fn repository<T: DbRecord>(
+        &self,
+    ) -> Result<crate::database::repository::Repository<T>, DbError> {
+        crate::database::repository::Repository::new(self.clone())
+    }
+
+    // ── Internal accessors (used by repository.rs and query.rs) ──────────────
+
+    /// Lock the connection for one operation.
+    ///
+    /// The `MutexGuard` releases the lock when it drops.
+    /// Never hold it across an `.await` or across frames.
+    pub(crate) fn lock(&self) -> MutexGuard<'_, Connection> {
+        self.inner
+            .lock()
+            .expect("DB mutex poisoned — this is a bug")
+    }
+
+    /// Create the table and indexes for T if they do not already exist.
+    ///
+    /// Called once by `Repository::new`. Subsequent calls are no-ops
+    /// because every statement uses `IF NOT EXISTS`.
+    pub(crate) fn ensure_table<T: DbRecord>(&self) -> Result<(), DbError> {
+        validate_identifier(T::table_name())?;
+
+        let create_table = build_create_table::<T>()?;
+        let create_indexes = build_create_indexes::<T>()?;
+
+        let conn = self.lock();
+
+        // Run inside one transaction so partial failure leaves nothing behind.
+        conn.execute_batch(&format!(
+            "BEGIN;\n{}\n{}\nCOMMIT;",
+            create_table,
+            create_indexes.join("\n")
+        ))?;
+
+        Ok(())
+    }
+}
+
+// ── Connection configuration ──────────────────────────────────────────────────
+
+fn configure(conn: &Connection) -> Result<(), DbError> {
+    // WAL: better concurrency, crash-safe without fsync on every write.
+    conn.pragma_update(None, "journal_mode", "WAL")?;
+    // Foreign keys are OFF by default in SQLite — always enable.
+    conn.pragma_update(None, "foreign_keys", true)?;
+    // NORMAL is the safe default for WAL mode.
+    conn.pragma_update(None, "synchronous", "NORMAL")?;
+    Ok(())
+}
+
+// ── SQL generation helpers ────────────────────────────────────────────────────
+
+/// Double-quote a SQL identifier (table name, column name).
+///
+/// This:
+///  1. Prevents SQL keyword conflicts ("select", "from", etc.).
+///  2. Handles identifiers that contain special characters.
+///  3. Is our defense-in-depth layer (identifiers also pass validate_identifier).
+pub(crate) fn quote_ident(name: &str) -> String {
+    // SQLite escapes " inside identifiers by doubling it: ""
+    format!(r#""{}""#, name.replace('"', r#""""#))
+}
+
+/// Validate that an identifier contains only safe characters.
+///
+/// Allowed: [A-Za-z0-9_], must start with a letter or underscore.
+/// Called on table names and column names before any SQL generation.
+pub(crate) fn validate_identifier(name: &str) -> Result<(), DbError> {
+    let ok = !name.is_empty()
+        && name
+            .chars()
+            .next()
+            .map(|c| c.is_ascii_alphabetic() || c == '_')
+            .unwrap_or(false)
+        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_');
+
+    if ok {
+        Ok(())
+    } else {
+        Err(DbError::InvalidIdentifier(name.to_string()))
+    }
+}
+
+fn build_create_table<T: DbRecord>() -> Result<String, DbError> {
+    let table = quote_ident(T::table_name());
+    let mut parts = vec![format!(
+        r#"{} INTEGER PRIMARY KEY AUTOINCREMENT"#,
+        quote_ident("id")
+    )];
+
+    for col in T::columns() {
+        validate_identifier(col.name)?;
+        parts.push(col.to_sql_fragment());
+    }
+
+    Ok(format!(
+        "CREATE TABLE IF NOT EXISTS {} (\n    {}\n);",
+        table,
+        parts.join(",\n    ")
+    ))
+}
+
+fn build_create_indexes<T: DbRecord>() -> Result<Vec<String>, DbError> {
+    let table = T::table_name();
+    let mut sqls = Vec::new();
+
+    for idx in T::indexes() {
+        for col in idx.columns {
+            validate_identifier(col)?;
+        }
+        let col_slug = idx.columns.join("_");
+        let index_name = if idx.unique {
+            format!("uidx_{}_{}", table, col_slug)
+        } else {
+            format!("idx_{}_{}", table, col_slug)
+        };
+        let cols_sql = idx
+            .columns
+            .iter()
+            .map(|c| quote_ident(c))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let unique = if idx.unique { "UNIQUE " } else { "" };
+        sqls.push(format!(
+            "CREATE {unique}INDEX IF NOT EXISTS {} ON {} ({cols_sql});",
+            quote_ident(&index_name),
+            quote_ident(table),
+        ));
+    }
+    Ok(sqls)
+}
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+
+/// Returns the current Unix timestamp in seconds.
+///
+/// Exported so application code can use it in `DbRecord::to_params()`
+/// without depending on std::time directly.
+pub fn now() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64
+}
+
+// ── Internal row-reading helper (shared by repository and query) ──────────────
+
+/// Read all columns for T from one SQLite row, returning a ValueSet.
+///
+/// The SELECT must use the exact column order: id, then T::columns() in order.
+/// `build_select_cols::<T>()` produces the matching SELECT fragment.
+pub(crate) fn row_to_valueset(
+    row: &rusqlite::Row<'_>,
+    column_names: &[&'static str],
+) -> rusqlite::Result<crate::database::record::ValueSet> {
+    let num = 1 + column_names.len();
+    let raw: rusqlite::Result<Vec<rusqlite::types::Value>> = (0..num)
+        .map(|i| row.get::<_, rusqlite::types::Value>(i))
+        .collect();
+
+    raw.map(|vals| {
+        crate::database::record::ValueSet::new(
+            vals.into_iter()
+                .map(crate::database::value::from_rusqlite)
+                .collect(),
+            column_names.to_vec(),
+        )
+    })
+}
+
+/// Build "id", "col1", "col2", … for SELECT statements.
+pub(crate) fn build_select_cols<T: DbRecord>() -> String {
+    let mut cols = vec![quote_ident("id")];
+    for col in T::columns() {
+        cols.push(quote_ident(col.name));
+    }
+    cols.join(", ")
+}
+
+/// Extract static column names from T::columns().
+pub(crate) fn column_names<T: DbRecord>() -> Vec<&'static str> {
+    T::columns().iter().map(|c| c.name).collect()
+}
+
+
+///////////////////////////
+// src\database\error.rs
+///////////////////////////
+// The single error type exposed by the library.
+// All rusqlite errors are wrapped so callers never need to import rusqlite.
+
+use std::fmt;
+
+#[derive(Debug)]
+pub enum DbError {
+    /// An underlying SQLite engine error.
+    Sql(rusqlite::Error),
+
+    /// A column value had an unexpected SQLite type.
+    TypeMismatch {
+        column: String,
+        expected: &'static str,
+        found: &'static str,
+    },
+
+    /// `get("col_name")` was called but that name is not in the row.
+    ColumnNotFound(String),
+
+    /// A table name or column name contains characters that are not
+    /// [a-z A-Z 0-9 _], which the lib requires to build safe SQL.
+    InvalidIdentifier(String),
+
+    /// A NOT NULL column contained NULL.
+    NullValue(String),
+
+    /// The requested record does not exist.
+    NotFound,
+
+    /// An application-level validation failure (empty title, etc.).
+    Validation(String),
+}
+
+impl fmt::Display for DbError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DbError::Sql(e) => write!(f, "SQLite: {e}"),
+            DbError::TypeMismatch {
+                column,
+                expected,
+                found,
+            } => write!(f, "column '{column}': expected {expected}, found {found}"),
+            DbError::ColumnNotFound(n) => write!(f, "column not found: '{n}'"),
+            DbError::InvalidIdentifier(n) => write!(f, "invalid SQL identifier: '{n}'"),
+            DbError::NullValue(col) => write!(f, "column '{col}' is NULL"),
+            DbError::NotFound => write!(f, "record not found"),
+            DbError::Validation(msg) => write!(f, "validation: {msg}"),
+        }
+    }
+}
+
+// Required so DbError can be boxed in std::error::Error chains.
+impl std::error::Error for DbError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        if let DbError::Sql(e) = self {
+            Some(e)
+        } else {
+            None
+        }
+    }
+}
+
+// Automatic ? conversion from rusqlite errors inside the lib.
+impl From<rusqlite::Error> for DbError {
+    fn from(e: rusqlite::Error) -> Self {
+        DbError::Sql(e)
+    }
+}
+
+
+///////////////////////////
+// src\database\mod.rs
+///////////////////////////
+pub mod column;
+pub mod database;
+pub mod error;
+mod persist;
+pub mod query;
+pub mod record;
+pub mod repository;
+mod sync;
+pub mod value;
+
+
+///////////////////////////
+// src\database\persist.rs
+///////////////////////////
+
+
+///////////////////////////
+// src\database\query.rs
+///////////////////////////
+// db_lib/src/query.rs
+//
+// QueryBuilder<T> is a chainable, type-safe query API.
+// The application never writes SQL strings or uses rusqlite directly.
+//
+// How it works:
+//   Each method appends to an internal list of Filters / OrderClauses.
+//   When .fetch(&db) or .count(&db) is called, the builder assembles
+//   one parameterized SQL string, executes it, and maps the rows via
+//   T::from_values().
+//
+// All column names go through validate_identifier() before use.
+// All values are bound as ? parameters — never interpolated into SQL.
+//
+// Usage example (from a repository method — the app never writes this SQL):
+//
+//   db.repository::<Task>()?
+//     .query()
+//     .where_eq("user_id",  user_id)
+//     .where_eq("deleted",  false)
+//     .where_eq("done",     false)
+//     .order_by("id", Dir::Asc)
+//     .limit(50)
+//     .fetch()?
+
+use crate::database::database::{
+    Db, build_select_cols, column_names, quote_ident, row_to_valueset, validate_identifier,
+};
+use crate::database::error::DbError;
+use crate::database::record::DbRecord;
+use crate::database::value::SqlValue;
+
+// ── Direction ─────────────────────────────────────────────────────────────────
+
+/// Sort direction for ORDER BY clauses.
+#[derive(Clone, Copy, Debug)]
+pub enum Dir {
+    Asc,
+    Desc,
+}
+
+impl Dir {
+    fn as_sql(self) -> &'static str {
+        match self {
+            Dir::Asc => "ASC",
+            Dir::Desc => "DESC",
+        }
+    }
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+
+/// One WHERE condition.
+///
+/// Never constructed directly by application code — use the QueryBuilder
+/// methods (where_eq, where_like, …) instead.
+#[derive(Clone)]
+struct Filter {
+    /// Already-validated and quoted column name fragment, e.g. `"user_id"`.
+    col: String,
+    /// SQL operator fragment, e.g. `"="`, `"!="`, `"LIKE"`, `"IS NULL"`.
+    op: &'static str,
+    /// Bound parameter value, or None for IS NULL / IS NOT NULL.
+    val: Option<SqlValue>,
+}
+
+impl Filter {
+    /// Write the SQL fragment: `"col" OP ?`  or  `"col" IS NULL`.
+    fn to_sql(&self) -> String {
+        if self.val.is_some() {
+            format!("{} {} ?", self.col, self.op)
+        } else {
+            // IS NULL or IS NOT NULL — no placeholder
+            format!("{} {}", self.col, self.op)
+        }
+    }
+}
+
+// ── OrderClause ───────────────────────────────────────────────────────────────
+
+#[derive(Clone)]
+struct OrderClause {
+    col: String,
+    dir: Dir,
+}
+
+// ── QueryBuilder ──────────────────────────────────────────────────────────────
+
+/// Chainable query builder for `Repository<T>`.
+///
+/// Constructed by `Repository::query()`. All methods take `self` by value
+/// so chains are clean:
+///
+/// ```rust
+/// let tasks = repo.query()
+///     .where_eq("user_id", 1i64)
+///     .where_eq("deleted", false)
+///     .where_like("title", "%milk%")
+///     .order_by("id", Dir::Asc)
+///     .limit(20)
+///     .fetch()?;
+/// ```
+pub struct QueryBuilder<T: DbRecord> {
+    db: Db,
+    filters: Vec<Filter>,
+    orders: Vec<OrderClause>,
+    limit: Option<i64>,
+    offset: Option<i64>,
+    /// Cached static column names extracted from T::columns()
+    cols: Vec<&'static str>,
+    _marker: std::marker::PhantomData<T>,
+}
+
+impl<T: DbRecord> QueryBuilder<T> {
+    pub(crate) fn new(db: Db) -> Self {
+        Self {
+            db,
+            filters: Vec::new(),
+            orders: Vec::new(),
+            limit: None,
+            offset: None,
+            cols: column_names::<T>(),
+            _marker: std::marker::PhantomData,
+        }
+    }
+
+    // ── WHERE filters ─────────────────────────────────────────────────────────
+
+    /// `WHERE "col" = ?`
+    ///
+    /// Accepts any type that converts to SqlValue: i64, bool, String, &str, f64, …
+    pub fn where_eq(self, col: &'static str, val: impl Into<SqlValue>) -> Self {
+        self.add_filter(col, "=", Some(val.into()))
+    }
+
+    /// `WHERE "col" != ?`
+    pub fn where_neq(self, col: &'static str, val: impl Into<SqlValue>) -> Self {
+        self.add_filter(col, "!=", Some(val.into()))
+    }
+
+    /// `WHERE "col" > ?`
+    pub fn where_gt(self, col: &'static str, val: impl Into<SqlValue>) -> Self {
+        self.add_filter(col, ">", Some(val.into()))
+    }
+
+    /// `WHERE "col" >= ?`
+    pub fn where_gte(self, col: &'static str, val: impl Into<SqlValue>) -> Self {
+        self.add_filter(col, ">=", Some(val.into()))
+    }
+
+    /// `WHERE "col" < ?`
+    pub fn where_lt(self, col: &'static str, val: impl Into<SqlValue>) -> Self {
+        self.add_filter(col, "<", Some(val.into()))
+    }
+
+    /// `WHERE "col" <= ?`
+    pub fn where_lte(self, col: &'static str, val: impl Into<SqlValue>) -> Self {
+        self.add_filter(col, "<=", Some(val.into()))
+    }
+
+    /// `WHERE "col" LIKE ?`  (use % and _ wildcards in the value)
+    ///
+    /// Example: `.where_like("title", "%milk%")`
+    pub fn where_like(self, col: &'static str, pattern: impl Into<SqlValue>) -> Self {
+        self.add_filter(col, "LIKE", Some(pattern.into()))
+    }
+
+    /// `WHERE "col" IS NULL`
+    pub fn where_null(self, col: &'static str) -> Self {
+        self.add_filter(col, "IS NULL", None)
+    }
+
+    /// `WHERE "col" IS NOT NULL`
+    pub fn where_not_null(self, col: &'static str) -> Self {
+        self.add_filter(col, "IS NOT NULL", None)
+    }
+
+    // ── ORDER BY ──────────────────────────────────────────────────────────────
+
+    /// `ORDER BY "col" ASC|DESC`
+    ///
+    /// Multiple calls add multiple ORDER BY terms.
+    pub fn order_by(mut self, col: &'static str, dir: Dir) -> Self {
+        // validate eagerly so the error surfaces at the call site, not at fetch()
+        if validate_identifier(col).is_ok() {
+            self.orders.push(OrderClause {
+                col: quote_ident(col),
+                dir,
+            });
+        }
+        self
+    }
+
+    // ── LIMIT / OFFSET ────────────────────────────────────────────────────────
+
+    /// `LIMIT n`
+    pub fn limit(mut self, n: i64) -> Self {
+        self.limit = Some(n);
+        self
+    }
+
+    /// `OFFSET n`  (requires LIMIT to be set; ignored by SQLite otherwise)
+    pub fn offset(mut self, n: i64) -> Self {
+        self.offset = Some(n);
+        self
+    }
+
+    // ── Terminal operations ───────────────────────────────────────────────────
+
+    /// Execute the query and return all matching rows as `Vec<T>`.
+    pub fn fetch(self) -> Result<Vec<T>, DbError> {
+        let (sql, params) = self.build_select()?;
+        let conn = self.db.lock();
+        let cols = self.cols.clone();
+        let mut stmt = conn.prepare(&sql)?;
+        let rows = stmt.query_map(rusqlite::params_from_iter(params.iter()), |row| {
+            row_to_valueset(row, &cols)
+        })?;
+        let mut result = Vec::new();
+        for row in rows {
+            let vs = row?;
+            result.push(T::from_values(&vs).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    0,
+                    rusqlite::types::Type::Null,
+                    Box::new(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        e.to_string(),
+                    )),
+                )
+            })?);
+        }
+        Ok(result)
+    }
+
+    /// Execute and return only the first matching row, or `None`.
+    pub fn fetch_one(self) -> Result<Option<T>, DbError> {
+        let mut results = self.limit(1).fetch()?;
+        Ok(results.pop())
+    }
+
+    /// `SELECT COUNT(*) FROM … WHERE …`
+    ///
+    /// Ignores ORDER BY, LIMIT, and OFFSET — they are irrelevant for counting.
+    pub fn count(self) -> Result<i64, DbError> {
+        let (where_sql, params) = build_where(&self.filters)?;
+        let table = quote_ident(T::table_name());
+        let sql = format!("SELECT COUNT(*) FROM {table}{where_sql}");
+        let conn = self.db.lock();
+        let count = conn.query_row(&sql, rusqlite::params_from_iter(params.iter()), |row| {
+            row.get::<_, i64>(0)
+        })?;
+        Ok(count)
+    }
+
+    /// Returns `true` if at least one row matches the filters.
+    pub fn exists(self) -> Result<bool, DbError> {
+        Ok(self.count()? > 0)
+    }
+
+    // ── Internal helpers ──────────────────────────────────────────────────────
+
+    fn add_filter(mut self, col: &'static str, op: &'static str, val: Option<SqlValue>) -> Self {
+        // Validate eagerly — if invalid, silently skip (error will surface at fetch()).
+        // We could also store a pending error, but eager validation is simpler.
+        if let Ok(()) = validate_identifier(col) {
+            self.filters.push(Filter {
+                col: quote_ident(col),
+                op,
+                val,
+            });
+        }
+        self
+    }
+
+    fn build_select(&self) -> Result<(String, Vec<SqlValue>), DbError> {
+        let table = quote_ident(T::table_name());
+        let select = build_select_cols::<T>();
+        let (where_sql, params) = build_where(&self.filters)?;
+
+        let order_sql = if self.orders.is_empty() {
+            String::new()
+        } else {
+            let terms: Vec<String> = self
+                .orders
+                .iter()
+                .map(|o| format!("{} {}", o.col, o.dir.as_sql()))
+                .collect();
+            format!(" ORDER BY {}", terms.join(", "))
+        };
+
+        let limit_sql = match (self.limit, self.offset) {
+            (Some(l), Some(o)) => format!(" LIMIT {l} OFFSET {o}"),
+            (Some(l), None) => format!(" LIMIT {l}"),
+            _ => String::new(),
+        };
+
+        let sql = format!("SELECT {select} FROM {table}{where_sql}{order_sql}{limit_sql}");
+        Ok((sql, params))
+    }
+}
+
+// ── Shared WHERE builder ──────────────────────────────────────────────────────
+
+/// Build the " WHERE …" fragment and collect bound parameter values.
+/// Returns ("", vec![]) when there are no filters.
+pub(crate) fn build_where(filters: &[Filter]) -> Result<(String, Vec<SqlValue>), DbError> {
+    if filters.is_empty() {
+        return Ok((String::new(), vec![]));
+    }
+    let mut params: Vec<SqlValue> = Vec::new();
+    let fragments: Vec<String> = filters
+        .iter()
+        .map(|f| {
+            if let Some(v) = &f.val {
+                params.push(v.clone());
+            }
+            f.to_sql()
+        })
+        .collect();
+    Ok((format!(" WHERE {}", fragments.join(" AND ")), params))
+}
+
+
+///////////////////////////
+// src\database\record.rs
+///////////////////////////
+// db_lib/src/record.rs
+//
+// DbRecord is the only trait the application needs to implement to use the
+// library. Everything else (table creation, SQL building, row mapping) is
+// handled automatically by Repository<T>.
+//
+// ValueSet is the opaque row handle passed to from_values().
+// The app accesses column values by name — no positional indices, no rusqlite.
+
+use crate::database::column::{Column, IndexDef};
+use crate::database::error::DbError;
+use crate::database::value::SqlValue;
+
+// ── ValueSet ──────────────────────────────────────────────────────────────────
+
+/// An opaque row handle passed to DbRecord::from_values().
+///
+/// Access values by column name. The `id` column is always available via
+/// `get("id")`. All other column names must appear in `DbRecord::columns()`.
+///
+/// # Example
+/// ```rust
+/// fn from_values(v: &ValueSet) -> Result<Self, DbError> {
+///     Ok(Task {
+///         id:      v.get("id")?.as_i64()?,
+///         title:   v.get("title")?.as_text()?,
+///         done:    v.get("done")?.as_bool()?,
+///     })
+/// }
+/// ```
+pub struct ValueSet {
+    /// values[0] = id, values[1..] = DbRecord::columns() in order.
+    pub(crate) values: Vec<SqlValue>,
+    /// names[i] corresponds to values[i + 1].
+    pub(crate) column_names: Vec<&'static str>,
+}
+
+impl ValueSet {
+    pub(crate) fn new(values: Vec<SqlValue>, column_names: Vec<&'static str>) -> Self {
+        Self {
+            values,
+            column_names,
+        }
+    }
+
+    /// Retrieve a column value by name.
+    ///
+    /// "id" is always valid. Other names must appear in DbRecord::columns().
+    /// Returns DbError::ColumnNotFound if the name is not in this row.
+    pub fn get(&self, name: &'static str) -> Result<&SqlValue, DbError> {
+        if name == "id" {
+            return self
+                .values
+                .get(0)
+                .ok_or_else(|| DbError::ColumnNotFound("id".into()));
+        }
+        // Linear scan — typically < 20 columns, not a bottleneck.
+        let pos = self
+            .column_names
+            .iter()
+            .position(|&n| n == name)
+            .ok_or_else(|| DbError::ColumnNotFound(name.into()))?;
+        self.values
+            .get(pos + 1)
+            .ok_or_else(|| DbError::ColumnNotFound(name.into()))
+    }
+}
+
+// ── DbRecord trait ────────────────────────────────────────────────────────────
+
+/// Trait that makes a struct storable in a SQLite table via Repository<T>.
+///
+/// # What you implement
+/// - `table_name` — the SQLite table name (e.g., `"tasks"`).
+/// - `columns` — all columns except `id` (which is auto-managed).
+/// - `indexes` — optional composite indexes (default: none).
+/// - `from_values` — deserialize one row into Self.
+/// - `to_params` — serialize Self into column-value pairs for INSERT/UPDATE.
+/// - `id` / `set_id` — let the library manage the primary key.
+///
+/// # What the library handles automatically
+/// - `CREATE TABLE IF NOT EXISTS` with all columns and the `id` PK.
+/// - `CREATE INDEX IF NOT EXISTS` for every IndexDef.
+/// - Building parameterized INSERT, UPDATE, DELETE, SELECT SQL.
+/// - Mapping query results back to Vec<T> via from_values.
+///
+/// # Security
+/// Column names and table names are double-quoted in all generated SQL.
+/// All values go through `?` parameterized placeholders — no interpolation.
+///
+/// # Example implementation
+/// ```rust
+/// impl DbRecord for Task {
+///     fn table_name() -> &'static str { "tasks" }
+///
+///     fn columns() -> Vec<Column> {
+///         vec![
+///             Column::new("user_id", ColType::Integer).not_null(),
+///             Column::new("title",   ColType::Text).not_null(),
+///             Column::new("done",    ColType::Integer).not_null().default("0"),
+///             Column::new("deleted", ColType::Integer).not_null().default("0"),
+///             Column::new("updated_at", ColType::Integer).not_null().default("(unixepoch())"),
+///         ]
+///     }
+///
+///     fn indexes() -> Vec<IndexDef> {
+///         vec![ IndexDef::new(&["user_id", "deleted"]) ]
+///     }
+///
+///     fn from_values(v: &ValueSet) -> Result<Self, DbError> {
+///         Ok(Task {
+///             id:         v.get("id")?.as_i64()?,
+///             user_id:    v.get("user_id")?.as_i64()?,
+///             title:      v.get("title")?.as_text()?,
+///             done:       v.get("done")?.as_bool()?,
+///             deleted:    v.get("deleted")?.as_bool()?,
+///             updated_at: v.get("updated_at")?.as_i64()?,
+///         })
+///     }
+///
+///     fn to_params(&self) -> Vec<(&'static str, SqlValue)> {
+///         vec![
+///             ("user_id",    self.user_id.into()),
+///             ("title",      self.title.clone().into()),
+///             ("done",       self.done.into()),
+///             ("deleted",    self.deleted.into()),
+///             ("updated_at", db_lib::now().into()),
+///         ]
+///     }
+///
+///     fn id(&self)               -> Option<i64> { if self.id > 0 { Some(self.id) } else { None } }
+///     fn set_id(&mut self, id: i64) { self.id = id; }
+/// }
+/// ```
+pub trait DbRecord: Sized + Clone {
+    // ── Schema ────────────────────────────────────────────────────────────────
+
+    /// The SQLite table name. Must match `^[A-Za-z][A-Za-z0-9_]*$`.
+    fn table_name() -> &'static str;
+
+    /// All columns except `id`.
+    ///
+    /// The order here defines the order in `from_values()`:
+    ///   values[0] = id
+    ///   values[1] = columns()[0].name
+    ///   values[2] = columns()[1].name
+    ///   …
+    fn columns() -> Vec<Column>;
+
+    /// Optional composite indexes. Default: none.
+    fn indexes() -> Vec<IndexDef> {
+        vec![]
+    }
+
+    // ── Row mapping ───────────────────────────────────────────────────────────
+
+    /// Deserialize one database row into Self.
+    ///
+    /// Access columns by name using `ValueSet::get("col")`.
+    fn from_values(v: &ValueSet) -> Result<Self, DbError>;
+
+    /// Serialize Self into column-name → value pairs for INSERT and UPDATE.
+    ///
+    /// - Do NOT include `id` — the library handles the primary key.
+    /// - Columns with DEFAULT values that you want auto-applied can be omitted.
+    /// - Columns you do include override any DEFAULT.
+    ///
+    /// For `updated_at`, include it here with `db_lib::now().into()` so it is
+    /// stamped correctly on every write.
+    fn to_params(&self) -> Vec<(&'static str, SqlValue)>;
+
+    // ── Primary key ───────────────────────────────────────────────────────────
+
+    /// Returns Some(id) for an already-persisted record, None for a new one
+    /// that has not been inserted yet (id == 0).
+    fn id(&self) -> Option<i64>;
+
+    /// Called by Repository::insert() to assign the DB-generated id to Self.
+    fn set_id(&mut self, id: i64);
+}
+
+
+///////////////////////////
+// src\database\repository.rs
+///////////////////////////
+// db_lib/src/repository.rs
+//
+// Repository<T> is the only type the application uses to write data.
+// It has no knowledge of any specific domain model — it works for any T
+// that implements DbRecord.
+//
+// Public methods:
+//   insert(&mut self, record: T)  → i64
+//   update(&self, id, |T| …)      → bool
+//   delete(&self, id)             → bool  (soft: sets deleted = 1)
+//   delete_hard(&self, id)        → bool  (removes the row)
+//   find(&self, id)               → Option<T>
+//   query(&self)                  → QueryBuilder<T>  (chainable)
+//
+// No rusqlite type ever appears in the public API.
+// Column names come from T::columns() — they are validated before any SQL runs.
+
+use crate::database::database::{
+    Db, build_select_cols, column_names, quote_ident, row_to_valueset, validate_identifier,
+};
+use crate::database::error::DbError;
+use crate::database::query::QueryBuilder;
+use crate::database::record::DbRecord;
+use crate::database::value::SqlValue;
+
+// ── Repository ────────────────────────────────────────────────────────────────
+
+/// Generic CRUD repository for any type implementing `DbRecord`.
+///
+/// Constructed via `db.repository::<T>()`, which also ensures the table
+/// and indexes exist before returning.
+///
+/// `Repository<T>` is `Clone` — cloning it is free (it holds only a `Db`
+/// which is `Arc<Mutex<Connection>>`).
+#[derive(Clone)]
+pub struct Repository<T: DbRecord> {
+    db: Db,
+    cols: Vec<&'static str>, // static column names from T::columns()
+    _marker: std::marker::PhantomData<T>,
+}
+
+impl<T: DbRecord> Repository<T> {
+    /// Create the repository and ensure the table exists.
+    ///
+    /// Called by `Db::repository::<T>()`. Not meant to be called directly.
+    pub(crate) fn new(db: Db) -> Result<Self, DbError> {
+        db.ensure_table::<T>()?;
+        Ok(Self {
+            cols: column_names::<T>(),
+            db,
+            _marker: std::marker::PhantomData,
+        })
+    }
+
+    // ── WRITE ─────────────────────────────────────────────────────────────────
+
+    /// INSERT a new record.
+    ///
+    /// The record's `id` field is ignored on entry.
+    /// The DB-generated id is written back via `T::set_id()` and also returned.
+    ///
+    /// # Example
+    /// ```rust
+    /// let id = repo.insert(Task { id: 0, title: "Buy milk".into(), .. })?;
+    /// ```
+    pub fn insert(&self, mut record: T) -> Result<i64, DbError> {
+        let params = record.to_params();
+        validate_params(&params)?;
+
+        let (col_sql, placeholders, values) = build_insert_parts(&params);
+        let table = quote_ident(T::table_name());
+        let sql = format!("INSERT INTO {table} ({col_sql}) VALUES ({placeholders})");
+
+        let conn = self.db.lock();
+        conn.execute(&sql, rusqlite::params_from_iter(values.iter()))?;
+        let id = conn.last_insert_rowid();
+        record.set_id(id);
+        Ok(id)
+    }
+
+    /// UPDATE an existing record by applying a mutation closure.
+    ///
+    /// The record is first fetched by id. If found, `mutate` is called on it,
+    /// then `to_params()` is called on the mutated record to build the UPDATE.
+    ///
+    /// Returns `true` if the record was found and updated.
+    ///
+    /// # Example
+    /// ```rust
+    /// repo.update(42, |task| { task.done = true; })?;
+    /// ```
+    pub fn update(&self, id: i64, mutate: impl FnOnce(&mut T)) -> Result<bool, DbError> {
+        // Fetch the current record first
+        let mut record = match self.find(id)? {
+            Some(r) => r,
+            None => return Ok(false),
+        };
+        mutate(&mut record);
+
+        let params = record.to_params();
+        validate_params(&params)?;
+
+        let set_clauses: Vec<String> = params
+            .iter()
+            .map(|(col, _)| format!("{} = ?", quote_ident(col)))
+            .collect();
+
+        let table = quote_ident(T::table_name());
+        let sql = format!(
+            "UPDATE {table} SET {} WHERE {} = ?",
+            set_clauses.join(", "),
+            quote_ident("id"),
+        );
+
+        // Values: all column values, then the id for the WHERE clause
+        let mut values: Vec<SqlValue> = params.into_iter().map(|(_, v)| v).collect();
+        values.push(SqlValue::Integer(id));
+
+        let rows = self
+            .db
+            .lock()
+            .execute(&sql, rusqlite::params_from_iter(values.iter()))?;
+        Ok(rows > 0)
+    }
+
+    /// SOFT DELETE — sets `deleted = 1` on the row.
+    ///
+    /// Requires the table to have a `deleted` column (INTEGER, default 0).
+    /// Use `query().where_eq("deleted", false)` in normal reads to exclude
+    /// soft-deleted rows.
+    ///
+    /// Preserves the row as a tombstone for future online sync.
+    ///
+    /// Returns `true` if the row was found.
+    pub fn delete(&self, id: i64) -> Result<bool, DbError> {
+        let table = quote_ident(T::table_name());
+        let rows = self.db.lock().execute(
+            &format!(
+                "UPDATE {table} SET {} = 1 WHERE {} = ?",
+                quote_ident("deleted"),
+                quote_ident("id"),
+            ),
+            [id],
+        )?;
+        Ok(rows > 0)
+    }
+
+    /// HARD DELETE — permanently removes the row from the table.
+    ///
+    /// ⚠️ Removes the tombstone. Use only if you are certain you will never
+    /// sync this record to another device.
+    ///
+    /// Returns `true` if the row existed.
+    pub fn delete_hard(&self, id: i64) -> Result<bool, DbError> {
+        let table = quote_ident(T::table_name());
+        let rows = self.db.lock().execute(
+            &format!("DELETE FROM {table} WHERE {} = ?", quote_ident("id")),
+            [id],
+        )?;
+        Ok(rows > 0)
+    }
+
+    // ── READ ──────────────────────────────────────────────────────────────────
+
+    /// Fetch one record by primary key.
+    ///
+    /// Returns `None` if the id does not exist.
+    /// Does NOT filter by `deleted` — use `query().where_eq("deleted", false)`
+    /// when you want to exclude soft-deleted records.
+    pub fn find(&self, id: i64) -> Result<Option<T>, DbError> {
+        let table = quote_ident(T::table_name());
+        let select = build_select_cols::<T>();
+        let sql = format!(
+            "SELECT {select} FROM {table} WHERE {} = ? LIMIT 1",
+            quote_ident("id")
+        );
+        let cols = self.cols.clone();
+        let conn = self.db.lock();
+        let mut stmt = conn.prepare(&sql)?;
+        let mut rows = stmt.query_map([id], |row| row_to_valueset(row, &cols))?;
+
+        match rows.next() {
+            None => Ok(None),
+            Some(row) => {
+                let vs = row?;
+                T::from_values(&vs)
+                    .map(Some)
+                    .map_err(|e| DbError::Validation(e.to_string()))
+            }
+        }
+    }
+
+    /// Entry point for chainable queries.
+    ///
+    /// Returns a `QueryBuilder<T>` — call `.where_eq(…)`, `.order_by(…)`,
+    /// `.limit(…)`, and finally `.fetch()` or `.count()`.
+    ///
+    /// # Example
+    /// ```rust
+    /// let pending: Vec<Task> = repo
+    ///     .query()
+    ///     .where_eq("user_id", user_id)
+    ///     .where_eq("done",    false)
+    ///     .where_eq("deleted", false)
+    ///     .order_by("id", Dir::Asc)
+    ///     .fetch()?;
+    /// ```
+    pub fn query(&self) -> QueryBuilder<T> {
+        QueryBuilder::new(self.db.clone())
+    }
+
+    // ── BULK helpers ──────────────────────────────────────────────────────────
+
+    /// INSERT many records in a single transaction.
+    ///
+    /// Returns the list of assigned ids in the same order as the input.
+    pub fn insert_many(&self, records: Vec<T>) -> Result<Vec<i64>, DbError> {
+        let conn = self.db.lock();
+        conn.execute_batch("BEGIN;")?;
+
+        let mut ids = Vec::with_capacity(records.len());
+        for mut record in records {
+            let params = record.to_params();
+            validate_params(&params)?;
+            let (col_sql, placeholders, values) = build_insert_parts(&params);
+            let table = quote_ident(T::table_name());
+            let sql = format!("INSERT INTO {table} ({col_sql}) VALUES ({placeholders})");
+            conn.execute(&sql, rusqlite::params_from_iter(values.iter()))?;
+            let id = conn.last_insert_rowid();
+            record.set_id(id);
+            ids.push(id);
+        }
+
+        conn.execute_batch("COMMIT;")?;
+        Ok(ids)
+    }
+}
+
+// ── Internal SQL-building helpers ─────────────────────────────────────────────
+
+/// Validate all column names in a to_params() result.
+fn validate_params(params: &[(&'static str, SqlValue)]) -> Result<(), DbError> {
+    for (col, _) in params {
+        validate_identifier(col)?;
+    }
+    Ok(())
+}
+
+/// Build the column list, placeholders, and value vector for an INSERT.
+///
+/// Returns:
+///   - `"\"col1\", \"col2\""` — for INSERT INTO tbl (…)
+///   - `"?, ?"` — for VALUES (…)
+///   - `vec![SqlValue, …]` — the bound parameter values
+fn build_insert_parts(params: &[(&'static str, SqlValue)]) -> (String, String, Vec<SqlValue>) {
+    let cols = params
+        .iter()
+        .map(|(c, _)| quote_ident(c))
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    let placeholders = params.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+
+    let values = params.iter().map(|(_, v)| v.clone()).collect();
+
+    (cols, placeholders, values)
+}
+
+
+///////////////////////////
+// src\database\sync.rs
+///////////////////////////
+
+
+///////////////////////////
+// src\database\value.rs
+///////////////////////////
+// SqlValue is the bridge between Rust types and SQLite column values.
+//
+// The app uses SqlValue in two places:
+//   - DbRecord::to_params()  → what to write into the DB
+//   - ValueSet::get("col")   → what was read back from the DB
+//
+// The app never imports rusqlite::types — only SqlValue and DbError.
+
+use crate::database::error::DbError;
+
+// ── Core enum ─────────────────────────────────────────────────────────────────
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum SqlValue {
+    Null,
+    Integer(i64),
+    Real(f64),
+    Text(String),
+}
+
+impl SqlValue {
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            SqlValue::Null => "Null",
+            SqlValue::Integer(_) => "Integer",
+            SqlValue::Real(_) => "Real",
+            SqlValue::Text(_) => "Text",
+        }
+    }
+
+    // ── Typed extractors (used in DbRecord::from_values) ─────────────────────
+
+    /// Extract an i64. Boolean columns stored as 0/1 use as_bool() instead.
+    pub fn as_i64(&self) -> Result<i64, DbError> {
+        match self {
+            SqlValue::Integer(i) => Ok(*i),
+            SqlValue::Null => Err(DbError::NullValue("?".into())),
+            other => Err(DbError::TypeMismatch {
+                column: "?".into(),
+                expected: "Integer",
+                found: other.type_name(),
+            }),
+        }
+    }
+
+    /// Extract an i64 that is a boolean column (0 = false, anything else = true).
+    pub fn as_bool(&self) -> Result<bool, DbError> {
+        self.as_i64().map(|i| i != 0)
+    }
+
+    /// Extract an f64.
+    pub fn as_f64(&self) -> Result<f64, DbError> {
+        match self {
+            SqlValue::Real(f) => Ok(*f),
+            SqlValue::Integer(i) => Ok(*i as f64), // widen integer to float
+            SqlValue::Null => Err(DbError::NullValue("?".into())),
+            other => Err(DbError::TypeMismatch {
+                column: "?".into(),
+                expected: "Real",
+                found: other.type_name(),
+            }),
+        }
+    }
+
+    /// Extract a String (clones the value).
+    pub fn as_text(&self) -> Result<String, DbError> {
+        match self {
+            SqlValue::Text(s) => Ok(s.clone()),
+            SqlValue::Null => Err(DbError::NullValue("?".into())),
+            other => Err(DbError::TypeMismatch {
+                column: "?".into(),
+                expected: "Text",
+                found: other.type_name(),
+            }),
+        }
+    }
+
+    /// Extract an optional String (Null → None, Text → Some).
+    pub fn as_opt_text(&self) -> Result<Option<String>, DbError> {
+        match self {
+            SqlValue::Text(s) => Ok(Some(s.clone())),
+            SqlValue::Null => Ok(None),
+            other => Err(DbError::TypeMismatch {
+                column: "?".into(),
+                expected: "Text or Null",
+                found: other.type_name(),
+            }),
+        }
+    }
+
+    /// Extract an optional i64 (Null → None).
+    pub fn as_opt_i64(&self) -> Result<Option<i64>, DbError> {
+        match self {
+            SqlValue::Integer(i) => Ok(Some(*i)),
+            SqlValue::Null => Ok(None),
+            other => Err(DbError::TypeMismatch {
+                column: "?".into(),
+                expected: "Integer or Null",
+                found: other.type_name(),
+            }),
+        }
+    }
+}
+
+// ── From<T> impls (used in DbRecord::to_params) ───────────────────────────────
+
+impl From<i64> for SqlValue {
+    fn from(v: i64) -> Self {
+        SqlValue::Integer(v)
+    }
+}
+impl From<i32> for SqlValue {
+    fn from(v: i32) -> Self {
+        SqlValue::Integer(v as i64)
+    }
+}
+impl From<u32> for SqlValue {
+    fn from(v: u32) -> Self {
+        SqlValue::Integer(v as i64)
+    }
+}
+impl From<bool> for SqlValue {
+    fn from(v: bool) -> Self {
+        SqlValue::Integer(v as i64)
+    }
+}
+impl From<f64> for SqlValue {
+    fn from(v: f64) -> Self {
+        SqlValue::Real(v)
+    }
+}
+impl From<f32> for SqlValue {
+    fn from(v: f32) -> Self {
+        SqlValue::Real(v as f64)
+    }
+}
+impl From<String> for SqlValue {
+    fn from(v: String) -> Self {
+        SqlValue::Text(v)
+    }
+}
+impl From<&str> for SqlValue {
+    fn from(v: &str) -> Self {
+        SqlValue::Text(v.to_string())
+    }
+}
+impl From<Option<String>> for SqlValue {
+    fn from(v: Option<String>) -> Self {
+        match v {
+            Some(s) => SqlValue::Text(s),
+            None => SqlValue::Null,
+        }
+    }
+}
+impl From<Option<i64>> for SqlValue {
+    fn from(v: Option<i64>) -> Self {
+        match v {
+            Some(i) => SqlValue::Integer(i),
+            None => SqlValue::Null,
+        }
+    }
+}
+
+// ── rusqlite ToSql impl (used internally by Repository) ──────────────────────
+// This is NEVER exported — it lives entirely inside the lib.
+
+impl rusqlite::types::ToSql for SqlValue {
+    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+        use rusqlite::types::{ToSqlOutput, Value, ValueRef};
+        match self {
+            SqlValue::Null => Ok(ToSqlOutput::Owned(Value::Null)),
+            SqlValue::Integer(i) => Ok(ToSqlOutput::Owned(Value::Integer(*i))),
+            SqlValue::Real(f) => Ok(ToSqlOutput::Owned(Value::Real(*f))),
+            // Borrow the string bytes — lifetime is tied to &self
+            SqlValue::Text(s) => Ok(ToSqlOutput::Borrowed(ValueRef::Text(s.as_bytes()))),
+        }
+    }
+}
+
+// ── Internal conversion FROM rusqlite Value ───────────────────────────────────
+// Used by Repository when reading rows. Not exported.
+
+pub(crate) fn from_rusqlite(v: rusqlite::types::Value) -> SqlValue {
+    use rusqlite::types::Value::*;
+    match v {
+        Null => SqlValue::Null,
+        Integer(i) => SqlValue::Integer(i),
+        Real(f) => SqlValue::Real(f),
+        Text(s) => SqlValue::Text(s),
+        Blob(_) => SqlValue::Null, // blobs not supported in this lib version
+    }
+}
+
+
+///////////////////////////
+// src\navigation\activity.rs
+///////////////////////////
+use crate::navigation::page::PageTrait;
+use eframe::egui;
+
+pub enum ActivityContent {
+    SubActivities {
+        // mainActivity: Box<dyn ActivityTrait>,
+        activities: Vec<Box<dyn ActivityTrait>>,
+    },
+    Pages {
+        // home: Box<dyn PageTrait>,
+        pages: Vec<Box<dyn PageTrait>>,
+    },
+}
+
+pub struct Activity {
+    id: &'static str,
+    title: &'static str,
+    icon: &'static [u8],
+    content: ActivityContent,
+}
+
+impl Activity {
+    fn new(
+        id: &'static str,
+        title: &'static str,
+        icon: &'static [u8],
+        content: ActivityContent,
+    ) -> Self {
+        Self {
+            id,
+            title,
+            icon,
+            content,
+        }
+    }
+
+    pub fn new_with_activities(
+        id: &'static str,
+        title: &'static str,
+        icon: &'static [u8],
+        // mainActivity: Box<dyn ActivityTrait>,
+        activities: Vec<Box<dyn ActivityTrait>>,
+    ) -> Self {
+        Self::new(
+            id,
+            title,
+            icon,
+            ActivityContent::SubActivities {
+                // mainActivity,
+                activities,
+            },
+        )
+    }
+
+    pub fn new_with_pages(
+        id: &'static str,
+        title: &'static str,
+        icon: &'static [u8],
+        // home: Box<dyn PageTrait>,
+        pages: Vec<Box<dyn PageTrait>>,
+    ) -> Self {
+        Self::new(
+            id,
+            title,
+            icon,
+            ActivityContent::Pages {
+                // home,
+                pages,
+            },
+        )
+    }
+
+    pub fn id(&self) -> &str {
+        self.id
+    }
+
+    pub fn title(&self) -> &str {
+        self.title
+    }
+
+    pub fn icon(&self) -> &[u8] {
+        self.icon
+    }
+
+    pub fn content(&self) -> &ActivityContent {
+        &self.content
+    }
+
+    pub fn content_mut(&mut self) -> &mut ActivityContent {
+        &mut self.content
+    }
+}
+
+pub trait ActivityTrait {
+    fn activity(&self) -> &Activity;
+
+    fn ui(&mut self, ui: &mut egui::Ui) {
+        ui.label(self.activity().title());
+    }
+}
+
+
+///////////////////////////
+// src\navigation\mod.rs
+///////////////////////////
+pub mod activity;
+pub mod page;
+
+
+///////////////////////////
+// src\navigation\page.rs
+///////////////////////////
+use eframe::egui;
+
+pub struct Page {
+    title: &'static str,
+    description: &'static str,
+    isShow: bool,
+    pub ordre: u8,
+}
+
+impl Page {
+    pub fn new(titre: &'static str, description: &'static str, isShow: bool, ordre: u8) -> Self {
+        Self {
+            title: titre,
+            description: description,
+            isShow,
+            ordre,
+        }
+    }
+
+    pub fn title(&self) -> &str {
+        self.title
+    }
+
+    pub fn description(&self) -> &str {
+        self.description
+    }
+
+    pub fn isShow(&self) -> bool {
+        self.isShow
+    }
+
+    pub fn show(&mut self) {
+        self.isShow = true;
+    }
+
+    pub fn hide(&mut self) {
+        self.isShow = false;
+    }
+}
+
+pub trait PageTrait {
+    fn page(&self) -> &Page;
+
+    fn ui(&mut self, ui: &mut egui::Ui);
+}
+
+
+///////////////////////////
+// src\widgets\button.rs
+///////////////////////////
+use std::sync::Arc;
+
+use eframe::egui;
+
+pub struct Button {
+    id: String,
+    label: String,
+    icon: Option<Arc<[u8]>>,
+    btnSize: egui::Vec2,
+    iconSize: egui::Vec2,
+    textSize: f32,
+    layoutDirection: egui::Direction, // TopDown, BottomUp, LeftToRight, RightToLeft
+}
+impl Button {
+    pub fn new(
+        id: String,
+        label: String,
+        icon: Option<Arc<[u8]>>,
+        btnSize: egui::Vec2,
+        iconSize: egui::Vec2,
+        textSize: f32,
+        layoutDirection: egui::Direction,
+    ) -> Self {
+        Self {
+            id,
+            label,
+            icon,
+            btnSize,
+            iconSize,
+            textSize,
+            layoutDirection,
+        }
+    }
+
+    pub fn ui(&self, ui: &mut egui::Ui) -> bool {
+        // reserve lespace et obtient la premiere interaction
+        let (rect, mut response) = ui.allocate_exact_size(self.btnSize, egui::Sense::click());
+
+        if ui.is_rect_visible(rect) {
+            // dessine le fond avant le texte/image
+            if response.hovered() || response.is_pointer_button_down_on() {
+                ui.painter()
+                    .rect_filled(rect, 4.0, egui::Color32::from_white_alpha(20));
+            }
+
+            let mut child_ui = ui.new_child(egui::UiBuilder::new().max_rect(rect));
+
+            let layout = egui::Layout::from_main_dir_and_cross_align(
+                self.layoutDirection,
+                egui::Align::Center,
+            )
+            .with_cross_justify(true);
+
+            child_ui.with_layout(layout, |ui| {
+                if let Some(iconBytes) = &self.icon {
+                    let image: egui::ImageSource<'_> = egui::ImageSource::Bytes {
+                        uri: std::borrow::Cow::Owned(self.id.clone()),
+                        bytes: egui::load::Bytes::Shared(iconBytes.clone()),
+                    };
+
+                    ui.add(egui::Image::new(image).fit_to_exact_size(self.iconSize));
+                }
+
+                // rend le text non selectable
+                ui.add(
+                    egui::Label::new(egui::RichText::new(&self.label).size(self.textSize))
+                        .selectable(false),
+                );
+            });
+        }
+        response = response.on_hover_cursor(egui::CursorIcon::PointingHand);
+
+        response.clicked()
+    }
+}
+
+
+///////////////////////////
+// src\widgets\mod.rs
+///////////////////////////
+mod button;
+
+pub use button::Button;
+

@@ -1,0 +1,99 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // Clear /tmp/Perso/linux
+        {
+            "label": "Clear",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "rm -r /tmp/Perso/${input:CLEAN_FOLDER}/*"
+            ],
+            "problemMatcher": [],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        // echo \"${workspaceFolder}/build/$platform\";
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "echo \"---start build script---\" ; origin=${workspaceFolder}; tmpdir=/tmp/Perso/linux; mkdir -p $tmpdir; cp -r $origin $tmpdir ; platform=${input:PLATFORM}; echo $platform ; dir=$tmpdir/MyLife; echo $dir; cd $dir; targetdir=$dir/build/$platform; echo $targetdir; mkdir -p $targetdir; $dir/build/script/build_$platform.sh; cp -r $dir/build $origin && echo \"✅ Build terminé\" || echo \"❌ Erreur durant la task de build\""
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        // Run depuis /tmp/Perso/linux
+        {
+            "label": "Run",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "echo \"---start build script---\" ; origin=${workspaceFolder}; tmpdir=/tmp/Perso/linux; mkdir -p $tmpdir; cp -r $origin $tmpdir ; platform=${input:PLATFORM}; echo $platform ; dir=$tmpdir/MyLife; echo $dir; cd $dir; targetdir=$dir/build/$platform; echo $targetdir; mkdir -p $targetdir; echo \"🚀 Exécution du script de run \"; $dir/build/script/run_$platform.sh && echo \"✅ Run terminé\" || echo \"❌ Erreur durant la task de run\""
+            ],
+            "problemMatcher": [],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build and Run",
+            "dependsOn": [
+                "Build",
+                "Run"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "CLEAN_FOLDER",
+            "type": "promptString",
+            "description": "Nom du folder a supprimer le contenu",
+            "default": "linux"
+        },
+        {
+            "id": "PLATFORM",
+            "type": "pickString",
+            "description": "Platform cible",
+            "options": [
+                "linux",
+                "android",
+                "windows"
+            ],
+            "default": "linux"
+        }
+    ]
+}

@@ -1,0 +1,26 @@
+=== Structure du projet ===
+
+├F─ Cargo.toml
+├F─ project_code.txt
+├F─ project_structure.txt
+├D─ src
+│   ├F─ lib.rs
+│   ├D─ database
+│   │   ├F─ column.rs
+│   │   ├F─ database.rs
+│   │   ├F─ error.rs
+│   │   ├F─ mod.rs
+│   │   ├F─ persist.rs
+│   │   ├F─ query.rs
+│   │   ├F─ record.rs
+│   │   ├F─ repository.rs
+│   │   ├F─ sync.rs
+│   │   ├F─ value.rs
+│   ├D─ navigation
+│   │   ├F─ activity.rs
+│   │   ├F─ mod.rs
+│   │   ├F─ page.rs
+│   ├D─ widgets
+│   │   ├F─ button.rs
+│   │   ├F─ mod.rs
+
