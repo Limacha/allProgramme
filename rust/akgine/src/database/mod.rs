@@ -19,7 +19,7 @@ mod value;
 // ── Public API ────────────────────────────────────────────────────────────────
 
 pub use column::{ColType, Column, IndexDef};
-pub use database::{DataBase, now};
+pub use database::DataBase;
 pub use error::DbError;
 pub use query::{Dir, QueryBuilder};
 pub use record::{DbRecord, ValueSet};

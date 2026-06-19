@@ -22,6 +22,12 @@
 //     .order_by("id", Dir::Asc)
 //     .limit(50)
 //     .fetch()?
+// QueryBuilder<T> — chainable, parameterized queries.
+// No SQL string ever leaves this file into application code.
+//
+// New vs previous version:
+//   Filter is now an enum (Cmp | In | Null) so where_in() is supported.
+//   where_in("category_id", &[1, 2, 3]) → WHERE "category_id" IN (?, ?, ?)
 
 use crate::database::database::{
     DataBase, build_select_cols, column_names, quote_ident, row_to_valueset, validate_identifier,
@@ -54,7 +60,7 @@ impl Dir {
 ///
 /// Never constructed directly by application code — use the QueryBuilder
 /// methods (where_eq, where_like, …) instead.
-#[derive(Clone)]
+/*#[derive(Clone)]
 struct Filter {
     /// Already-validated and quoted column name fragment, e.g. `"user_id"`.
     col: String,
@@ -72,6 +78,43 @@ impl Filter {
         } else {
             // IS NULL or IS NOT NULL — no placeholder
             format!("{} {}", self.col, self.op)
+        }
+    }
+}*/
+
+#[derive(Clone)]
+enum Filter {
+    /// col OP ?   or   col IS NULL / IS NOT NULL
+    Cmp {
+        col: String,
+        op: &'static str,
+        val: Option<SqlValue>,
+    },
+    /// col IN (?, ?, …)
+    In { col: String, vals: Vec<SqlValue> },
+}
+
+impl Filter {
+    fn to_sql(&self) -> String {
+        match self {
+            Filter::Cmp { col, op, val } => {
+                if val.is_some() {
+                    format!("{col} {op} ?")
+                } else {
+                    format!("{col} {op}")
+                }
+            }
+            Filter::In { col, vals } => {
+                let ph = vals.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+                format!("{col} IN ({ph})")
+            }
+        }
+    }
+    fn push_params(&self, out: &mut Vec<SqlValue>) {
+        match self {
+            Filter::Cmp { val: Some(v), .. } => out.push(v.clone()),
+            Filter::Cmp { .. } => {}
+            Filter::In { vals, .. } => out.extend(vals.iter().cloned()),
         }
     }
 }
@@ -116,14 +159,13 @@ impl<T: DbRecord> QueryBuilder<T> {
         Self {
             db,
             filters: Vec::new(),
-            orders: Vec::new(),
+            orders: vec![],
             limit: None,
             offset: None,
             cols: column_names::<T>(),
             _marker: std::marker::PhantomData,
         }
     }
-
     // ── WHERE filters ─────────────────────────────────────────────────────────
 
     /// `WHERE "col" = ?`
@@ -173,6 +215,33 @@ impl<T: DbRecord> QueryBuilder<T> {
     /// `WHERE "col" IS NOT NULL`
     pub fn where_not_null(self, col: &'static str) -> Self {
         self.add_filter(col, "IS NOT NULL", None)
+    }
+
+    /// `WHERE "col" IN (?, ?, …)`
+    ///
+    /// Used to fetch rows linked by FK to a set of parent ids:
+    /// ```rust
+    /// // All tasks that belong to category 1, 3, or 7
+    /// repo.query()
+    ///     .where_in("category_id", vec![1, 3, 7])
+    ///     .fetch()?;
+    /// ```
+    ///
+    /// An empty slice produces a query that always returns zero rows (no panic).
+    pub fn where_in(mut self, col: &'static str, ids: Vec<i64>) -> Self {
+        if validate_identifier(col).is_err() {
+            return self;
+        }
+        if ids.is_empty() {
+            // WHERE id = -1 is always false → zero rows returned
+            return self.add_filter("id", "=", Some(SqlValue::Integer(-1)));
+        }
+        let vals: Vec<SqlValue> = ids.into_iter().map(SqlValue::Integer).collect();
+        self.filters.push(Filter::In {
+            col: quote_ident(col),
+            vals,
+        });
+        self
     }
 
     // ── ORDER BY ──────────────────────────────────────────────────────────────
@@ -234,9 +303,14 @@ impl<T: DbRecord> QueryBuilder<T> {
     }
 
     /// Execute and return only the first matching row, or `None`.
+    // pub fn fetch_one(self) -> Result<Option<T>, DbError> {
+    //     let mut results = self.limit(1).fetch()?;
+    //     Ok(results.pop())
+    // }
+
+    /// Execute and return only the first row (adds LIMIT 1).
     pub fn fetch_one(self) -> Result<Option<T>, DbError> {
-        let mut results = self.limit(1).fetch()?;
-        Ok(results.pop())
+        Ok(self.limit(1).fetch()?.into_iter().next())
     }
 
     /// `SELECT COUNT(*) FROM … WHERE …`
@@ -260,11 +334,22 @@ impl<T: DbRecord> QueryBuilder<T> {
 
     // ── Internal helpers ──────────────────────────────────────────────────────
 
+    // fn add_filter(mut self, col: &'static str, op: &'static str, val: Option<SqlValue>) -> Self {
+    //     // Validate eagerly — if invalid, silently skip (error will surface at fetch()).
+    //     // We could also store a pending error, but eager validation is simpler.
+    //     if let Ok(()) = validate_identifier(col) {
+    //         self.filters.push(Filter {
+    //             col: quote_ident(col),
+    //             op,
+    //             val,
+    //         });
+    //     }
+    //     self
+    // }
+
     fn add_filter(mut self, col: &'static str, op: &'static str, val: Option<SqlValue>) -> Self {
-        // Validate eagerly — if invalid, silently skip (error will surface at fetch()).
-        // We could also store a pending error, but eager validation is simpler.
-        if let Ok(()) = validate_identifier(col) {
-            self.filters.push(Filter {
+        if validate_identifier(col).is_ok() {
+            self.filters.push(Filter::Cmp {
                 col: quote_ident(col),
                 op,
                 val,
@@ -312,9 +397,10 @@ pub(crate) fn build_where(filters: &[Filter]) -> Result<(String, Vec<SqlValue>),
     let fragments: Vec<String> = filters
         .iter()
         .map(|f| {
-            if let Some(v) = &f.val {
-                params.push(v.clone());
-            }
+            // if let Some(v) = &f.val {
+            //     params.push(v.clone());
+            // }
+            f.push_params(&mut params);
             f.to_sql()
         })
         .collect();

@@ -45,11 +45,15 @@ impl<T: DbRecord> Repository<T> {
     /// Called by `Db::repository::<T>()`. Not meant to be called directly.
     pub(crate) fn new(db: DataBase) -> Result<Self, DbError> {
         db.ensure_table::<T>()?;
-        Ok(Self {
+        Ok(Self::attached(db))
+    }
+
+    pub(crate) fn attached(db: DataBase) -> Self {
+        Self {
             cols: column_names::<T>(),
             db,
             _marker: std::marker::PhantomData,
-        })
+        }
     }
 
     // ── WRITE ─────────────────────────────────────────────────────────────────
@@ -188,6 +192,52 @@ impl<T: DbRecord> Repository<T> {
                     .map_err(|e| DbError::Validation(e.to_string()))
             }
         }
+    }
+
+    /// Fetch multiple rows by primary key in one query (`WHERE id IN (…)`).
+    ///
+    /// Used by domain repositories to resolve FK relationships without N+1 queries.
+    ///
+    /// ```rust
+    /// // Batch-fetch all categories referenced by a list of tasks
+    /// let cat_ids: Vec<i64> = tasks.iter().filter_map(|t| t.category_id).collect();
+    /// let categories: Vec<Category> = db.of::<Category>().find_many(&cat_ids)?;
+    /// ```
+    pub fn find_many(&self, ids: &[i64]) -> Result<Vec<T>, DbError> {
+        if ids.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let placeholders = ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        let select = build_select_cols::<T>();
+        let table = quote_ident(T::table_name());
+        let sql = format!(
+            "SELECT {select} FROM {table} WHERE {} IN ({placeholders})",
+            quote_ident("id")
+        );
+
+        let params: Vec<SqlValue> = ids.iter().map(|&id| SqlValue::Integer(id)).collect();
+        let cols = self.cols.clone();
+        let conn = self.db.lock();
+        let mut stmt = conn.prepare(&sql)?;
+        let rows = stmt.query_map(rusqlite::params_from_iter(params.iter()), |row| {
+            row_to_valueset(row, &cols)
+        })?;
+        let mut result = Vec::new();
+        for row in rows {
+            let vs = row?;
+            result.push(T::from_values(&vs).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    0,
+                    rusqlite::types::Type::Null,
+                    Box::new(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        e.to_string(),
+                    )),
+                )
+            })?);
+        }
+        Ok(result)
     }
 
     /// Entry point for chainable queries.

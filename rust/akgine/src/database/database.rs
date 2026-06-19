@@ -68,6 +68,30 @@ impl DataBase {
 
     // ── Convenience factory ───────────────────────────────────────────────────
 
+    /// Ensure the table for `T` exists (CREATE TABLE / INDEX IF NOT EXISTS).
+    ///
+    /// Call this **once per domain type at startup**, before using `of::<T>()`.
+    ///
+    /// FK rule: register the parent table before the child table.
+    ///   `db.register::<Category>()? ` → then → `db.register::<Task>()?`
+    ///
+    /// This is idempotent — safe to call more than once.
+    pub fn register<T: DbRecord>(&self) -> Result<(), DbError> {
+        self.ensure_table::<T>()
+    }
+
+    // ── Repository factory ────────────────────────────────────────────────────
+
+    /// Get a `Repository<T>` **without** running ensure_table.
+    ///
+    /// Cheap — only clones the Arc handle and copies static metadata.
+    /// Safe to call every frame.
+    ///
+    /// Requires `db.register::<T>()` to have been called at startup.
+    pub fn of<T: DbRecord>(&self) -> repository::Repository<T> {
+        repository::Repository::attached(self.clone())
+    }
+
     /// Create a `Repository<T>`, ensuring the table and indexes exist.
     ///
     /// This is the main entry-point from application code:
@@ -205,19 +229,6 @@ fn build_create_indexes<T: DbRecord>() -> Result<Vec<String>, DbError> {
         ));
     }
     Ok(sqls)
-}
-
-// ── Utility ───────────────────────────────────────────────────────────────────
-
-/// Returns the current Unix timestamp in seconds.
-///
-/// Exported so application code can use it in `DbRecord::to_params()`
-/// without depending on std::time directly.
-pub fn now() -> i64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64
 }
 
 // ── Internal row-reading helper (shared by repository and query) ──────────────
