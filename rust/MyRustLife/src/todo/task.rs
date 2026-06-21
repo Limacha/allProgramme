@@ -71,20 +71,20 @@ impl DbRecord for Task {
 
     // ── Row → struct ──────────────────────────────────────────────────────────
 
-    fn from_values(v: &ValueSet) -> Result<Self, DbError> {
+    fn getValues(v: &ValueSet) -> Result<Self, DbError> {
         Ok(Task {
-            id: v.get("id")?.as_i64()?,
-            user_id: v.get("user_id")?.as_i64()?,
-            title: v.get("title")?.as_text()?,
-            done: v.get("done")?.as_bool()?,
-            deleted: v.get("deleted")?.as_bool()?,
-            updated_at: v.get("updated_at")?.as_i64()?,
+            id: v.getValue("id")?.as_i64()?,
+            user_id: v.getValue("user_id")?.as_i64()?,
+            title: v.getValue("title")?.as_text()?,
+            done: v.getValue("done")?.as_bool()?,
+            deleted: v.getValue("deleted")?.as_bool()?,
+            updated_at: v.getValue("updated_at")?.as_i64()?,
         })
     }
 
     // ── struct → row ──────────────────────────────────────────────────────────
 
-    fn to_params(&self) -> Vec<(&'static str, SqlValue)> {
+    fn toParams(&self) -> Vec<(&'static str, SqlValue)> {
         vec![
             ("user_id", self.user_id.into()),
             ("title", self.title.clone().into()),

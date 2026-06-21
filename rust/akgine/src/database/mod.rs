@@ -21,7 +21,7 @@ mod value;
 pub use column::{ColType, Column, IndexDef};
 pub use database::DataBase;
 pub use error::DbError;
-pub use query::{Dir, QueryBuilder};
+pub use query::{Direction, QueryBuilder};
 pub use record::{DbRecord, ValueSet};
 pub use repository::Repository;
 pub use value::SqlValue;

@@ -45,7 +45,7 @@ impl DataBase {
     pub fn open(path: &Path) -> Result<Self, DbError> {
         // verif the dir exist or create it
         if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).ok(); // best-effort
+            std::fs::create_dir_all(parent).ok(); // if error ignore it and try open the DB
         }
         // ? -> si erreur stop la fonction et renvoie l'erreur
         let conn: Connection = Connection::open(path)?;
@@ -56,7 +56,7 @@ impl DataBase {
     }
 
     /// Open an in-memory database. Useful for unit tests.
-    ///
+    /// Don't edit the db file
     /// The database is destroyed when this handle (and all its clones) drop.
     pub fn in_memory() -> Result<Self, DbError> {
         let conn: Connection = Connection::open_in_memory()?;
@@ -77,7 +77,7 @@ impl DataBase {
     ///
     /// This is idempotent — safe to call more than once.
     pub fn register<T: DbRecord>(&self) -> Result<(), DbError> {
-        self.ensure_table::<T>()
+        self.ensureTable::<T>()
     }
 
     // ── Repository factory ────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ impl DataBase {
     /// Safe to call every frame.
     ///
     /// Requires `db.register::<T>()` to have been called at startup.
-    pub fn of<T: DbRecord>(&self) -> repository::Repository<T> {
+    pub fn getRepository<T: DbRecord>(&self) -> repository::Repository<T> {
         repository::Repository::attached(self.clone())
     }
 
@@ -98,7 +98,7 @@ impl DataBase {
     /// ```rust
     /// let tasks: Repository<Task> = db.repository()?;
     /// ```
-    pub fn repository<T: DbRecord>(&self) -> Result<repository::Repository<T>, DbError> {
+    pub fn ensureRepository<T: DbRecord>(&self) -> Result<repository::Repository<T>, DbError> {
         repository::Repository::new(self.clone())
     }
 
@@ -109,28 +109,26 @@ impl DataBase {
     /// The `MutexGuard` releases the lock when it drops.
     /// Never hold it across an `.await` or across frames.
     pub(crate) fn lock(&self) -> MutexGuard<'_, Connection> {
-        self.inner
-            .lock()
-            .expect("DB mutex poisoned — this is a bug")
+        self.inner.lock().expect("DB mutex poisoned")
     }
 
     /// Create the table and indexes for T if they do not already exist.
     ///
     /// Called once by `Repository::new`. Subsequent calls are no-ops
     /// because every statement uses `IF NOT EXISTS`.
-    pub(crate) fn ensure_table<T: DbRecord>(&self) -> Result<(), DbError> {
-        validate_identifier(T::table_name())?;
+    pub(crate) fn ensureTable<T: DbRecord>(&self) -> Result<(), DbError> {
+        validateIdentifier(T::table_name())?;
 
-        let create_table: String = build_create_table::<T>()?;
-        let create_indexes: Vec<String> = build_create_indexes::<T>()?;
+        let createTableQuery: String = generate_create_table_query::<T>()?;
+        let createIndexesQuery: Vec<String> = generate_create_indexes_query::<T>()?;
 
         let conn: MutexGuard<'_, Connection> = self.lock();
 
         // Run inside one transaction so partial failure leaves nothing behind.
         conn.execute_batch(&format!(
             "BEGIN;\n{}\n{}\nCOMMIT;",
-            create_table,
-            create_indexes.join("\n")
+            createTableQuery,
+            createIndexesQuery.join("\n")
         ))?;
 
         Ok(())
@@ -139,8 +137,13 @@ impl DataBase {
 
 // ── Connection configuration ──────────────────────────────────────────────────
 
+/// set the db params
+/// journal mode: WAL
+/// foreign keys: true
+/// synchronous : normal
 fn configure(conn: &Connection) -> Result<(), DbError> {
     // WAL: better concurrency, crash-safe without fsync on every write.
+    // allow read db while editing in by writing change in .sqlite-wal file
     conn.pragma_update(None, "journal_mode", "WAL")?;
     // Foreign keys are OFF by default in SQLite — always enable.
     conn.pragma_update(None, "foreign_keys", true)?;
@@ -157,7 +160,7 @@ fn configure(conn: &Connection) -> Result<(), DbError> {
 ///  1. Prevents SQL keyword conflicts ("select", "from", etc.).
 ///  2. Handles identifiers that contain special characters.
 ///  3. Is our defense-in-depth layer (identifiers also pass validate_identifier).
-pub(crate) fn quote_ident(name: &str) -> String {
+pub(crate) fn quoteIdentifier(name: &str) -> String {
     // SQLite escapes " inside identifiers by doubling it: ""
     format!(r#""{}""#, name.replace('"', r#""""#))
 }
@@ -166,9 +169,11 @@ pub(crate) fn quote_ident(name: &str) -> String {
 ///
 /// Allowed: [A-Za-z0-9_], must start with a letter or underscore.
 /// Called on table names and column names before any SQL generation.
-pub(crate) fn validate_identifier(name: &str) -> Result<(), DbError> {
+pub(crate) fn validateIdentifier(name: &str) -> Result<(), DbError> {
     let ok: bool = !name.is_empty()
-        && name
+        && 
+        // check the first char
+        name
             .chars()
             .next()
             .map(|c| c.is_ascii_alphabetic() || c == '_')
@@ -182,15 +187,15 @@ pub(crate) fn validate_identifier(name: &str) -> Result<(), DbError> {
     }
 }
 
-fn build_create_table<T: DbRecord>() -> Result<String, DbError> {
-    let table: String = quote_ident(T::table_name());
+fn generate_create_table_query<T: DbRecord>() -> Result<String, DbError> {
+    let table: String = quoteIdentifier(T::table_name());
     let mut parts: Vec<String> = vec![format!(
         r#"{} INTEGER PRIMARY KEY AUTOINCREMENT"#,
-        quote_ident("id")
+        quoteIdentifier("id")
     )];
 
     for col in T::columns() {
-        validate_identifier(col.name)?;
+        validateIdentifier(col.name)?;
         parts.push(col.to_sql_fragment());
     }
 
@@ -201,13 +206,14 @@ fn build_create_table<T: DbRecord>() -> Result<String, DbError> {
     ))
 }
 
-fn build_create_indexes<T: DbRecord>() -> Result<Vec<String>, DbError> {
+fn generate_create_indexes_query<T: DbRecord>() -> Result<Vec<String>, DbError> {
+    // don't validate the name because this is already made
     let table: &str = T::table_name();
     let mut sqls: Vec<String> = Vec::new();
 
     for idx in T::indexes() {
         for col in idx.columns {
-            validate_identifier(col)?;
+            validateIdentifier(col)?;
         }
         let col_slug: String = idx.columns.join("_");
         let index_name: String = if idx.unique {
@@ -218,14 +224,14 @@ fn build_create_indexes<T: DbRecord>() -> Result<Vec<String>, DbError> {
         let cols_sql: String = idx
             .columns
             .iter()
-            .map(|c| quote_ident(c))
+            .map(|c| quoteIdentifier(c))
             .collect::<Vec<_>>()
             .join(", ");
         let unique: &str = if idx.unique { "UNIQUE " } else { "" };
         sqls.push(format!(
             "CREATE {unique}INDEX IF NOT EXISTS {} ON {} ({cols_sql});",
-            quote_ident(&index_name),
-            quote_ident(table),
+            quoteIdentifier(&index_name),
+            quoteIdentifier(table),
         ));
     }
     Ok(sqls)
@@ -241,12 +247,14 @@ pub(crate) fn row_to_valueset(
     row: &rusqlite::Row<'_>,
     column_names: &[&'static str],
 ) -> rusqlite::Result<crate::database::record::ValueSet> {
-    let num: usize = 1 + column_names.len();
-    let raw: rusqlite::Result<Vec<rusqlite::types::Value>> = (0..num)
-        .map(|i| row.get::<_, rusqlite::types::Value>(i))
+    // id + columns set
+    let nbColumns: usize = 1 + column_names.len();
+    // get each value of the row
+    let raw: rusqlite::Result<Vec<rusqlite::types::Value>> = (0..nbColumns)
+        .map(|i: usize| row.get::<_, rusqlite::types::Value>(i))
         .collect();
 
-    raw.map(|vals| {
+    raw.map(|vals: Vec<rusqlite::types::Value>| {
         crate::database::record::ValueSet::new(
             vals.into_iter()
                 .map(crate::database::value::from_rusqlite)
@@ -257,15 +265,15 @@ pub(crate) fn row_to_valueset(
 }
 
 /// Build "id", "col1", "col2", … for SELECT statements.
-pub(crate) fn build_select_cols<T: DbRecord>() -> String {
-    let mut cols = vec![quote_ident("id")];
+pub(crate) fn generate_select_columns_sql<T: DbRecord>() -> String {
+    let mut columns: Vec<String> = vec![quoteIdentifier("id")];
     for col in T::columns() {
-        cols.push(quote_ident(col.name));
+        columns.push(quoteIdentifier(col.name));
     }
-    cols.join(", ")
+    columns.join(", ")
 }
 
 /// Extract static column names from T::columns().
 pub(crate) fn column_names<T: DbRecord>() -> Vec<&'static str> {
-    T::columns().iter().map(|c| c.name).collect()
+    T::columns().iter().map(|c: &super::Column| c.name).collect()
 }

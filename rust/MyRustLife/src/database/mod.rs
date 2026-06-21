@@ -20,7 +20,7 @@ pub fn dbPath() -> PathBuf {
 
         let mut path = PathBuf::from(format!("/data/data/{}/files", package_name));
         let _ = std::fs::create_dir_all(&path); // Ensure the app files directory is ready
-        path.push("database.db");
+        path.push("database.akldb");
         path
     }
 
@@ -31,10 +31,10 @@ pub fn dbPath() -> PathBuf {
             let mut path: PathBuf = PathBuf::from(local_app_data);
             path.push("MyRustLife");
             let _ = std::fs::create_dir_all(&path); // Create application folder if missing
-            path.push("database.db");
+            path.push("database.akldb");
             path
         } else {
-            PathBuf::from("database.db") // Fallback to current working directory
+            PathBuf::from("database.akldb") // Fallback to current working directory
         }
     }
 
@@ -45,10 +45,10 @@ pub fn dbPath() -> PathBuf {
             let mut path = PathBuf::from(home);
             path.push(".local/share/MyRustLife");
             let _ = std::fs::create_dir_all(&path); // Create application folder if missing
-            path.push("database.db");
+            path.push("database.akldb");
             path
         } else {
-            PathBuf::from("database.db") // Fallback to current working directory
+            PathBuf::from("database.akldb") // Fallback to current working directory
         }
     }
 }

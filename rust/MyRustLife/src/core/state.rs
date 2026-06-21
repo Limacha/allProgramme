@@ -1,7 +1,7 @@
 use crate::todo::Task;
 use akgine::database::DataBase;
 use std::{
-    ptr::null,
+    mem::take,
     sync::{Arc, Mutex},
 };
 
@@ -39,13 +39,18 @@ impl Default for State {
         let path: &str = "/ReleaseActivity";
 
         let db: DataBase = openDataBase().expect("Failed to init database");
+
+        // registre and get the table/repo
         db.register::<Task>();
-        let tasks = db.of::<Task>();
+        let tasks: akgine::database::Repository<Task> = db.getRepository::<Task>();
+        // can be remplace by
+        // db.ensureRepository::<Task>();
+        let mut new_task = Task::new(73, "finir cette merde".to_string());
 
-        let mut newTask = Task::new(73, "finir cette merde".to_string());
-        let id = tasks.insert(newTask);
-
-        let maybe_task = tasks.find(1);
+        let id: Result<i64, akgine::database::DbError> = tasks.insert(new_task);
+        let maybe_task: Result<Option<Task>, akgine::database::DbError> = tasks.find(1);
+        // let maybe_task: Result<Option<Task>, akgine::database::DbError> =
+        //     tasks.query().where_eq("id", 1).fetch_one();
 
         Self {
             router: Router::new(path),

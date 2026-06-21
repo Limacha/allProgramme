@@ -12,8 +12,11 @@ pub enum DbError {
         found: &'static str,
     },
 
-    /// `get("col_name")` was called but that name is not in the row.
+    /// `getValue("col_name")` was called but that name is not in the row.
     ColumnNotFound(String),
+
+    /// `getValue("col_name")` was called but that name is in the row but no value is link.
+    ColumnValueNotFound(String),
 
     /// A table name or column name contains characters that are not
     /// [a-z A-Z 0-9 _], which the lib requires to build safe SQL.
@@ -40,6 +43,7 @@ impl fmt::Display for DbError {
                 found,
             } => write!(f, "column '{column}': expected {expected}, found {found}"),
             DbError::ColumnNotFound(n) => write!(f, "column not found: '{n}'"),
+            DbError::ColumnValueNotFound(n) => write!(f, "value in column not found: '{n}'"),
             DbError::InvalidIdentifier(n) => write!(f, "invalid SQL identifier: '{n}'"),
             DbError::NullValue(col) => write!(f, "column '{col}' is NULL"),
             DbError::NotFound => write!(f, "record not found"),

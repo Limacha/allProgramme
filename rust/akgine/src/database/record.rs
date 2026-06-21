@@ -28,9 +28,9 @@ use crate::database::value::SqlValue;
 /// ```
 pub struct ValueSet {
     /// values[0] = id, values[1..] = DbRecord::columns() in order.
-    pub(crate) values: Vec<SqlValue>,
+    values: Vec<SqlValue>,
     /// names[i] corresponds to values[i + 1].
-    pub(crate) column_names: Vec<&'static str>,
+    column_names: Vec<&'static str>,
 }
 
 impl ValueSet {
@@ -45,7 +45,7 @@ impl ValueSet {
     ///
     /// "id" is always valid. Other names must appear in DbRecord::columns().
     /// Returns DbError::ColumnNotFound if the name is not in this row.
-    pub fn get(&self, name: &'static str) -> Result<&SqlValue, DbError> {
+    pub fn getValue(&self, name: &'static str) -> Result<&SqlValue, DbError> {
         if name == "id" {
             return self
                 .values
@@ -53,14 +53,14 @@ impl ValueSet {
                 .ok_or_else(|| DbError::ColumnNotFound("id".into()));
         }
         // Linear scan — typically < 20 columns, not a bottleneck.
-        let pos = self
+        let pos: usize = self
             .column_names
             .iter()
             .position(|&n| n == name)
             .ok_or_else(|| DbError::ColumnNotFound(name.into()))?;
         self.values
             .get(pos + 1)
-            .ok_or_else(|| DbError::ColumnNotFound(name.into()))
+            .ok_or_else(|| DbError::ColumnValueNotFound(name.into()))
     }
 }
 
@@ -130,6 +130,7 @@ impl ValueSet {
 ///     fn set_id(&mut self, id: i64) { self.id = id; }
 /// }
 /// ```
+/// Size -> avoid usin `dyn DbRecord` insted use `fun t<T: DbRecord>(record: &T) {}`
 pub trait DbRecord: Sized + Clone {
     // ── Schema ────────────────────────────────────────────────────────────────
 
@@ -155,7 +156,7 @@ pub trait DbRecord: Sized + Clone {
     /// Deserialize one database row into Self.
     ///
     /// Access columns by name using `ValueSet::get("col")`.
-    fn from_values(v: &ValueSet) -> Result<Self, DbError>;
+    fn getValues(v: &ValueSet) -> Result<Self, DbError>;
 
     /// Serialize Self into column-name → value pairs for INSERT and UPDATE.
     ///
@@ -165,7 +166,7 @@ pub trait DbRecord: Sized + Clone {
     ///
     /// For `updated_at`, include it here with `db_lib::now().into()` so it is
     /// stamped correctly on every write.
-    fn to_params(&self) -> Vec<(&'static str, SqlValue)>;
+    fn toParams(&self) -> Vec<(&'static str, SqlValue)>;
 
     // ── Primary key ───────────────────────────────────────────────────────────
 
