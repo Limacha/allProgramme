@@ -103,12 +103,15 @@ impl ActivityTrait for MainActivity {
                                 let icon: Arc<[u8]> = Arc::from(act.activity().icon());
                                 let button: Button = Button::new(
                                     id.clone(),
-                                    title.clone(),
+                                    Some(title.clone()),
                                     Some(icon),
-                                    btn_size,
+                                    Some(btn_size),
                                     egui::vec2(30.0, 30.0),   // taille icône
                                     14.0,                     // taille texte
                                     egui::Direction::TopDown, // icône AU DESSUS du texte
+                                    None,
+                                    None,
+                                    egui::Align::Center,
                                 );
 
                                 if button.ui(&mut columns[i]) {

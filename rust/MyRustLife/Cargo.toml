@@ -15,7 +15,7 @@ unused_parens = "allow"
 # path = "src/main.rs"
 
 [dependencies]
-akgine = { path = "D:\\github\\allProgramme\\rust\\akgine" }
+akgine = { version = "0.1.0" }
 egui_extras = { version = "0.34.1", features = ["image"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

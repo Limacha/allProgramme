@@ -1,3 +1,4 @@
 [workspace]
-members = ["MyRustLife", "akgine"]
-resolver = "2"
+members = ["MyRustLife"]
+# members = ["MyRustLife", "akgine"]
+# resolver = "2"

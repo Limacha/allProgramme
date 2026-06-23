@@ -47,6 +47,8 @@ dependencies = [
 [[package]]
 name = "akgine"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8bd0400c58143226125d0220abd00c89b0df033e0f61ca6759a492a5d4584f9"
 dependencies = [
  "android-activity",
  "eframe",

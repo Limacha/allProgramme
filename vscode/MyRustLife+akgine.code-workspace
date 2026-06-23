@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"name": "MyRustLife",
+			"path": "../rust/MyRustLife"
+		},
+		{
+			"name": "akgine",
+			"path": "../../akgine"
+		},
+		{
+			"name": ".github",
+			"path": "../.github"
+		}
+	],
+	"settings": {}
+}
