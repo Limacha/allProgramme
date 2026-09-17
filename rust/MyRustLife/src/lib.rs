@@ -48,7 +48,7 @@
 //         Box::new(|cc| Ok(Box::new(app::App::new(cc)))),
 //     );
 // }
-
+/*
 #![allow(non_snake_case)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -61,8 +61,8 @@ mod watchList;
 
 // #[allow(unused_imports)]
 use core::consts::*;
-use eframe::egui;
-use std::sync::Arc;
+
+use akgine::app::run_desktop_app;
 
 /// Shared entry point (desktop + reusable)
 pub fn run() -> eframe::Result<()> {
@@ -102,4 +102,42 @@ fn android_main(app: AndroidApp) {
         options,
         Box::new(|cc: &eframe::CreationContext<'_>| Ok(Box::new(app::App::new(cc)))),
     );
+}
+*/
+
+#![allow(non_snake_case)]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+mod app;
+mod core;
+mod database;
+mod home;
+mod todo;
+mod watchList;
+
+// #[allow(unused_imports)]
+use core::consts::*;
+
+use akgine::gui::app::run_desktop_app;
+
+/// Shared entry point (desktop + reusable)
+pub fn run() -> Result<(), String> {
+    // Les bytes de l'icône sont chargés ici mais décodés par akgine
+    let icon_bytes = include_bytes!("../assets/icon/icon.png");
+
+    run_desktop_app(APP_NAME, Some(icon_bytes), |cc| app::App::new(cc))
+}
+
+// Android entry point
+#[cfg(target_os = "android")]
+use android_activity::AndroidApp;
+
+#[cfg(target_os = "android")]
+use akgine::app::run_android_app;
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+fn android_main(app: AndroidApp) {
+    // Le mode plein écran est configuré en interne par akgine
+    run_android_app(app, APP_NAME, |cc| app::App::new(cc));
 }

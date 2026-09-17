@@ -1,5 +1,6 @@
 use crate::core::state::AppState;
 use crate::todo::task::Task;
+
 use akgine::database::Repository;
 
 pub fn add_new_task(state: &AppState, title: &str) {

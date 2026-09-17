@@ -1,4 +1,11 @@
 clear
-D:\rust\windows\cargo\bin\cargo.exe clean
-D:\rust\windows\cargo\bin\cargo.exe build --release --target x86_64-pc-windows-msvc --bin MyRustLife -p MyRustLife
-D:\rust\windows\cargo\bin\cargo.exe run --release --target x86_64-pc-windows-msvc --bin MyRustLife -p MyRustLife
+# D:\rust\windows\cargo\bin\cargo.exe clean
+# D:\rust\windows\cargo\bin\cargo.exe build --release --target x86_64-pc-windows-msvc --bin MyRustLife -p MyRustLife
+# D:\rust\windows\cargo\bin\cargo.exe run --release --target x86_64-pc-windows-msvc --bin MyRustLife -p MyRustLife
+
+cd G:\allProgramme\rust\MyRustLife
+cargo run --release --target x86_64-pc-windows-msvc --bin MyRustLife -p MyRustLife
+
+cargo clean
+cargo build --release --target x86_64-pc-windows-msvc --bin MyRustLife -p MyRustLife
+cargo run --release --target x86_64-pc-windows-msvc --bin MyRustLife -p MyRustLife

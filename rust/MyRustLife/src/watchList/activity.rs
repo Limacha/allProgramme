@@ -1,4 +1,4 @@
-use akgine::navigation::activity::{Activity, ActivityTrait};
+use akgine::gui::navigation::activity::{Activity, ActivityTrait};
 
 use crate::home::Home;
 

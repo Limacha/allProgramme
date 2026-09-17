@@ -1,9 +1,10 @@
 use crate::app::MainActivity;
-use crate::app::stateManager;
-use crate::core::consts::*;
+use crate::app::stateManager::get_shared_state;
 use crate::core::state;
-use akgine::navigation::activity::{Activity, ActivityContent, ActivityTrait};
-use eframe::egui;
+use akgine::gui::context::UiContext;
+use akgine::gui::navigation::activity::{Activity, ActivityContent, ActivityTrait};
+use akgine::gui::widgets::Label;
+use akgine::gui::widgets::Panel;
 
 pub struct DebugActivity {
     pub activity: Activity,
@@ -26,82 +27,85 @@ impl ActivityTrait for DebugActivity {
         &self.activity
     }
 
-    fn ui(&mut self, ui: &mut egui::Ui) {
-        let context: egui::Context = ui.ctx().clone();
+    fn ui(&mut self, ctx: &mut UiContext) {
+        // let context: egui::Context = ui.ctx().clone();
 
-        let state: std::sync::Arc<std::sync::Mutex<state::State>> =
-            stateManager::get_shared_state(&context);
+        // let state: std::sync::Arc<std::sync::Mutex<state::State>> =
+        //     stateManager::get_shared_state(&context);
 
-        let mut top_frame = egui::Frame::new();
-        top_frame.inner_margin.top = TOP_PADDING;
-        top_frame.inner_margin.bottom = PADDING;
+        let state: std::sync::Arc<std::sync::Mutex<state::State>> = get_shared_state(ctx);
 
-        egui::Panel::top("debugPanel")
-            .frame(top_frame)
-            .show_inside(ui, |ui| {
-                // monitor size
-                let (monitor_size, win_size) = ui.input(|i| {
-                    let vp = i.viewport();
-                    (vp.monitor_size, vp.inner_rect.map(|r| r.size()))
-                });
+        Panel::top("debugPanel").show(ctx, |inner_ctx| {
+            // monitor size
+            let (monitor_size, win_size) = inner_ctx.input(|i| {
+                let vp = i.viewport();
+                (vp.monitor_size, vp.inner_rect.map(|r| r.size()))
+            });
 
-                let screen_str: String = monitor_size
-                    .map(|m| format!("ecran:{}x{}", m.x as i32, m.y as i32))
-                    .unwrap_or_default();
+            let screen_str: String = monitor_size
+                .map(|m| format!("ecran:{}x{}", m.x as i32, m.y as i32))
+                .unwrap_or_default();
 
-                let win_str: String = win_size
-                    .map(|w| format!("fenetre:{}x{}", w.x as i32, w.y as i32))
-                    .unwrap_or_default();
+            let win_str: String = win_size
+                .map(|w| format!("fenetre:{}x{}", w.x as i32, w.y as i32))
+                .unwrap_or_default();
 
-                let content: egui::Rect = context.content_rect();
+            let (content_width, content_height) = inner_ctx.content_size();
 
-                // delta time
-                let deltaTime: f32 = ui.input(|inputState| inputState.stable_dt);
-                let fps: f32 = if (deltaTime > 0.0) {
-                    1.0 / deltaTime
-                } else {
-                    0.0
-                };
+            // delta time
+            let deltaTime: f32 = inner_ctx.input(|inputState| inputState.stable_dt);
+            let fps: f32 = if (deltaTime > 0.0) {
+                1.0 / deltaTime
+            } else {
+                0.0
+            };
 
-                let stateLock: std::sync::MutexGuard<'_, state::State> = state.lock().unwrap();
+            let stateLock: std::sync::MutexGuard<'_, state::State> = state.lock().unwrap();
 
-                ui.label(format!(
+            Label::text(
+                "lblDebugPath",
+                format!(
                     "path ({}): {}",
                     stateLock.router.index(),
                     stateLock.router.path()
-                ));
+                ),
+            )
+            .ui(inner_ctx);
 
-                drop(stateLock);
+            drop(stateLock);
 
-                ui.label(format!(
+            Label::text(
+                "lblDebugContent",
+                format!(
                     "content : {}x {} | {} | {}",
-                    content.width() as i32,
-                    content.height() as i32,
-                    screen_str,
-                    win_str
-                ));
+                    content_width as i32, content_height as i32, screen_str, win_str
+                ),
+            )
+            .ui(inner_ctx);
 
-                ui.label(format!(
-                    "v0.0.1 | dt : {:.4}s | FPS : {:.1}",
-                    deltaTime, fps
-                ));
+            Label::text(
+                "lblDebugInfo",
+                format!("v0.0.1 | dt : {:.4}s | FPS : {:.1}", deltaTime, fps),
+            )
+            .ui(inner_ctx);
 
-                let debugTexts: Vec<String> = state.lock().unwrap().debug_texts.clone();
+            let debugTexts: Vec<String> = state.lock().unwrap().debug_texts.clone();
 
-                for (debugText) in debugTexts.iter() {
-                    ui.label(debugText);
-                }
-            });
+            for (debugText) in debugTexts.iter() {
+                Label::text("lblDebugText", debugText).ui(inner_ctx);
+            }
+        });
 
         match self.activity.content_mut() {
             ActivityContent::SubActivities { activities } => {
-                activities.get_mut(0).unwrap().ui(ui);
+                activities.get_mut(0).unwrap().ui(ctx);
             }
             // ActivityContent::Pages { home, pages } => {
 
             // }
             _ => {
-                ui.label("no mainActivity set");
+                // ui.label("no mainActivity set");
+                Label::text("noMainAct", "no mainActivity set").ui(ctx);
             }
         }
     }

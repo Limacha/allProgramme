@@ -15,26 +15,13 @@ unused_parens = "allow"
 # path = "src/main.rs"
 
 [dependencies]
-akgine = { version = "0.1.0" }
-egui_extras = { version = "0.34.1", features = ["image"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+akgine = { version = "0.1.5", path = "G:\\akgine", features = ["gui"] }
+# serde = { version = "1.0.229", features = ["derive"] }
+# serde_json = "1"
 
-[target.'cfg(not(target_os = "android"))'.dependencies]
-eframe = { version = "0.34.1", default-features = false, features = [
-    "default_fonts",
-    "glow",
-    "persistence",
-] }
+# [target.'cfg(not(target_os = "android"))'.dependencies]
 
-# eframe SANS les features desktop/accesskit quand on build Android
 [target.'cfg(target_os = "android")'.dependencies]
-eframe = { version = "0.34.1", default-features = false, features = [
-    "default_fonts",
-    "android-native-activity",
-    "glow",
-    "persistence",
-] }
 android-activity = { version = "0.6", features = ["native-activity"] }
 
 # cargo-apk metadata

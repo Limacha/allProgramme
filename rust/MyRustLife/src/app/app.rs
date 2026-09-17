@@ -1,12 +1,14 @@
 use std::vec;
 
-use akgine::navigation::activity::ActivityTrait;
-use eframe::egui;
+use akgine::gui::app::{AppTrait, CreationContext, install_image_loaders};
+use akgine::gui::context::UiContext;
+use akgine::gui::navigation::activity::ActivityTrait;
+use akgine::gui::widgets::Label;
 
 use crate::app::DebugActivity;
 use crate::app::ReleaseActivity;
 use crate::app::stateManager;
-
+/*/
 pub struct App {
     activities: Vec<Box<dyn ActivityTrait>>,
 }
@@ -65,5 +67,47 @@ impl eframe::App for App {
         }
 
         // context.request_repaint();
+    }
+}
+*/
+
+pub struct App {
+    activities: Vec<Box<dyn ActivityTrait>>,
+}
+
+impl App {
+    pub fn new(cc: &CreationContext<'_>) -> Self {
+        install_image_loaders(cc);
+
+        Self {
+            activities: vec![
+                Box::new(ReleaseActivity::init()),
+                Box::new(DebugActivity::init()),
+            ],
+        }
+    }
+}
+
+impl AppTrait for App {
+    fn ui(&mut self, ctx: &mut UiContext) {
+        let state = stateManager::get_shared_state(ctx);
+
+        let current_title = state
+            .lock()
+            .unwrap()
+            .router
+            .current()
+            .unwrap_or("ReleaseActivity")
+            .to_string();
+
+        if let Some(activity) = self
+            .activities
+            .iter_mut()
+            .find(|a| a.activity().id() == current_title)
+        {
+            activity.ui(ctx);
+        } else {
+            Label::text("lblNoPageFound", "pas de pages trouver.");
+        }
     }
 }

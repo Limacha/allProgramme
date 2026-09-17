@@ -1,10 +1,8 @@
 use crate::core::state::{SharedStateRef, State};
-use eframe::egui;
-use std::sync::{Arc, Mutex};
 
-fn state_id() -> egui::Id {
-    egui::Id::new("appSharedState")
-}
+use akgine::gui::context::UiContext;
+
+use std::sync::{Arc, Mutex};
 
 // /// Initialise l'état uniquement s'il n'existe pas déjà (Idempotent).
 // pub fn init_shared_state(ctx: &egui::Context) -> SharedStateRef {
@@ -28,17 +26,21 @@ fn state_id() -> egui::Id {
 // }
 
 /// Récupère l'état partagé, ou l'initialise s'il n'existe pas encore.
-pub fn get_shared_state(ctx: &egui::Context) -> SharedStateRef {
-    ctx.data_mut(|d| {
-        // On essaie de récupérer l'état existant
-        match d.get_temp::<SharedStateRef>(state_id()) {
-            Some(state) => state, // Il existe, on le retourne
-            None => {
-                // Il n'existe pas encore, on l'initialise et on l'insère
-                let new_state: SharedStateRef = Arc::new(Mutex::new(State::default()));
-                d.insert_temp(state_id(), new_state.clone());
-                new_state
-            }
-        }
-    })
+// pub fn get_shared_state(ctx: &egui::Context) -> SharedStateRef {
+//     ctx.data_mut(|d| {
+//         // On essaie de récupérer l'état existant
+//         match d.get_temp::<SharedStateRef>(state_id()) {
+//             Some(state) => state, // Il existe, on le retourne
+//             None => {
+//                 // Il n'existe pas encore, on l'initialise et on l'insère
+//                 let new_state: SharedStateRef = Arc::new(Mutex::new(State::default()));
+//                 d.insert_temp(state_id(), new_state.clone());
+//                 new_state
+//             }
+//         }
+//     })
+// }
+
+pub fn get_shared_state(ctx: &mut UiContext) -> SharedStateRef {
+    ctx.get_or_init_state("appSharedState", || Arc::new(Mutex::new(State::default())))
 }

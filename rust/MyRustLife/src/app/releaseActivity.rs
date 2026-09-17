@@ -1,8 +1,12 @@
-use eframe::egui;
+// use eframe::egui;
 
 use crate::app::MainActivity;
 use crate::core::consts::*;
-use akgine::navigation::activity::{Activity, ActivityContent, ActivityTrait};
+
+use akgine::gui::context::UiContext;
+use akgine::gui::navigation::activity::{Activity, ActivityContent, ActivityTrait};
+use akgine::gui::widgets::{Label, Panel};
+
 pub struct ReleaseActivity {
     pub activity: Activity,
 }
@@ -24,28 +28,24 @@ impl ActivityTrait for ReleaseActivity {
         &self.activity
     }
 
-    fn ui(&mut self, ui: &mut egui::Ui) {
-        let mut top_frame = egui::Frame::new();
-        top_frame.inner_margin.top = TOP_PADDING;
-        top_frame.inner_margin.bottom = PADDING;
-
-        #[allow(unused_variables)]
-        egui::Panel::top("spacePanel")
-            .frame(top_frame)
-            .show_inside(ui, |ui| {});
-
+    fn ui(&mut self, ctx: &mut UiContext) {
+        if (TOP_PADDING > 0) {
+            Panel::top("spacePanel")
+                .inner_margin(TOP_PADDING as f32, PADDING as f32)
+                .show(ctx, |_inner_ctx| {});
+        }
         match self.activity.content_mut() {
             ActivityContent::SubActivities {
                 // mainActivity,
                 activities,
             } => {
-                activities.get_mut(0).unwrap().ui(ui);
+                activities.get_mut(0).unwrap().ui(ctx);
             }
             // ActivityContent::Pages { home, pages } => {
 
             // }
             _ => {
-                ui.label("no mainActivity set");
+                Label::text("noMainAct", "no mainActivity set").ui(ctx);
             }
         }
     }

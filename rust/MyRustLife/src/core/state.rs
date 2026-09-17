@@ -1,5 +1,5 @@
 use akgine::database::DataBase;
-use akgine::navigation::Router;
+use akgine::gui::navigation::Router;
 use std::sync::{Arc, Mutex};
 
 use crate::database::{dbPath, openDataBase};

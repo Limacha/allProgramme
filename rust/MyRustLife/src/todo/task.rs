@@ -1,5 +1,3 @@
-// src/todo/task.rs
-//
 // Task is the domain model for one todo entry.
 //
 // The only thing that must match between columns() / to_params() / from_values()

@@ -1,10 +1,9 @@
 // use crate::core::state;
 // use crate::{app::stateManager, todo::task::Task};
 use crate::todo::Home;
-use akgine::{
-    // database::Repository,
-    navigation::activity::{Activity, ActivityContent, ActivityTrait},
-};
+use akgine::gui::context::UiContext;
+use akgine::gui::navigation::activity::{Activity, ActivityContent, ActivityTrait};
+use akgine::gui::widgets::Label;
 
 pub struct TodoActivity {
     activity: Activity,
@@ -27,7 +26,7 @@ impl ActivityTrait for TodoActivity {
         &self.activity
     }
 
-    fn ui(&mut self, ui: &mut eframe::egui::Ui) {
+    fn ui(&mut self, ctx: &mut UiContext) {
         // ui.label(self.activity.title());
 
         // let context: &eframe::egui::Context = ui.ctx();
@@ -39,9 +38,9 @@ impl ActivityTrait for TodoActivity {
         match self.activity.content_mut() {
             ActivityContent::Pages { pages } => {
                 if let Some(home) = pages.iter_mut().next() {
-                    home.ui(ui);
+                    home.ui(ctx);
                 } else {
-                    ui.label("pas de pages trouver.");
+                    Label::text("lblNoPage", "pas de pages trouver.").ui(ctx);
                 }
             }
             // ActivityContent::Pages { home, pages } => {
